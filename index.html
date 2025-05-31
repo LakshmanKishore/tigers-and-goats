@@ -6,12 +6,42 @@
       name="viewport"
       content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1"
     />
-    <title>Tic Tac Toe</title>
+    <title>Tigers and Goats</title>
   </head>
   <body>
     <main>
-      <div id="board" class="initial"></div>
-      <ul id="playersSection"></ul>
+      <div id="configPage" class="config-page">
+        <h1>Tigers and Goats</h1>
+        <div id="playersSection" class="players-container"></div>
+        <div id="gameOptions" class="game-options">
+          <div id="boardTypes" class="board-types">
+            <div class="board-option" data-index="0">
+              <img src="src/assets/board-type-1.png" alt="Simple Board" class="board-image" />
+            </div>
+            <div class="board-option" data-index="1">
+              <img src="src/assets/board-type-2.png" alt="Complex Board" class="board-image" />
+            </div>
+          </div>
+          <div id="pieceTypes" class="piece-types">
+            <div class="piece-option" data-index="0">
+              <img src="src/assets/tiger.png" alt="Tiger" class="piece-image" />
+            </div>
+            <div class="piece-option" data-index="1">
+              <img src="src/assets/goat.png" alt="Goat" class="piece-image" />
+            </div>
+          </div>
+        </div>
+        <button id="startButton" class="start-button">Start Game</button>
+      </div>
+
+      <div id="gamePage" class="game-page">
+        <h1>Tigers and Goats</h1>
+        <div id="gameInfo" class="game-info">
+          <div class="game-info-item" id="boardTypeInfo"></div>
+          <div class="game-info-item" id="pieceTypeInfo"></div>
+        </div>
+        <div id="gameBoard" class="game-board"></div>
+      </div>
     </main>
     <script type="module" src="/src/logic.ts"></script>
     <script type="module" src="/src/client.ts"></script>
