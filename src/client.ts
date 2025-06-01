@@ -3,8 +3,6 @@ import "./styles.css"
 import { PlayerId } from "rune-sdk"
 
 import selectSoundAudio from "./assets/select.wav"
-import tigerImage from "./assets/tiger.png"
-import goatImage from "./assets/goat.png"
 import robotImage from "./assets/robot.png"
 
 // DOM Elements
@@ -23,9 +21,11 @@ const selectSound = new Audio(selectSoundAudio)
 // Game state
 let selectedBoardType: number | null = null
 let selectedPieceType: number | null = null
+let playerBoardSelections: Record<string, number | null> = {}
+let playerPieceSelections: Record<string, number | null> = {}
 let playerElements: HTMLElement[] = []
-let isYourTurn = false
 let yourPlayerId: PlayerId | undefined
+let isPlayingWithBot: boolean = false
 
 // Board and piece images
 const boardImages = [
@@ -38,53 +38,69 @@ const pieceImages = ["src/assets/tiger.png", "src/assets/goat.png"]
  * Updates the start button state
  */
 function updateStartButton() {
-  startButton.disabled =
-    selectedBoardType === null || selectedPieceType === null || !isYourTurn
+  const boardSelected = selectedBoardType !== null
+  const playerHasSelectedPiece = Object.keys(playerPieceSelections).length >= 1
+  const bothPlayersSelectedPieces =
+    Object.keys(playerPieceSelections).length >= 2
+
+  // For single player mode, only need board + single piece selection
+  // For multiplayer mode, need board + both players have pieces
+  const canStart =
+    boardSelected &&
+    (isPlayingWithBot ? playerHasSelectedPiece : bothPlayersSelectedPieces)
+
+  startButton.disabled = !canStart
 }
 
 /**
- * Update game selection based on other player's choice
+ * Update board selection UI to show single board selection
  */
-function updateSelectionUI(boardType: number | null, pieceType: number | null) {
-  // Update board selection UI
-  if (boardType !== null) {
-    const boardOptions = boardTypes.querySelectorAll(".board-option")
-    boardOptions.forEach((option, index) => {
-      if (index === boardType) {
-        option.classList.add("selected")
-      } else {
-        option.classList.remove("selected")
-      }
+function updateBoardSelectionUI() {
+  const boardOptions = boardTypes.querySelectorAll(".board-option")
 
-      // If it's not your turn, disable all options
-      if (!isYourTurn) {
-        option.classList.add("disabled")
-      } else {
-        option.classList.remove("disabled")
-      }
-    })
-  }
+  boardOptions.forEach((option, index) => {
+    // Remove all selection classes
+    option.classList.remove(
+      "selected",
+      "selected-player-0",
+      "selected-player-1",
+      "disabled-by-other",
+      "selected-multiple"
+    )
 
-  // Update piece selection UI
-  if (pieceType !== null) {
-    const pieceOptions = pieceTypes.querySelectorAll(".piece-option")
-    pieceOptions.forEach((option, index) => {
-      if (index === pieceType) {
-        option.classList.add("selected")
-      } else {
-        option.classList.remove("selected")
-      }
+    // Check if this board is the globally selected board
+    if (selectedBoardType === index) {
+      option.classList.add("selected")
+    }
+  })
+}
 
-      // If it's not your turn, disable all options
-      if (!isYourTurn) {
-        option.classList.add("disabled")
-      } else {
-        option.classList.remove("disabled")
-      }
-    })
-  }
+/**
+ * Update piece selection UI to show player-specific selections
+ */
+function updatePieceSelectionUI() {
+  const pieceOptions = pieceTypes.querySelectorAll(".piece-option")
 
-  updateStartButton()
+  pieceOptions.forEach((option, index) => {
+    // Remove all selection classes
+    option.classList.remove(
+      "selected",
+      "selected-player-0",
+      "selected-player-1",
+      "disabled-by-other"
+    )
+
+    // Find which player has selected this piece
+    const playerWithThisPiece = Object.entries(playerPieceSelections).find(
+      ([, selection]) => selection === index
+    )
+
+    if (playerWithThisPiece) {
+      const [playerId] = playerWithThisPiece
+      const playerIndex = Object.keys(playerPieceSelections).indexOf(playerId)
+      option.classList.add(`selected-player-${playerIndex}`)
+    }
+  })
 }
 
 /**
@@ -118,17 +134,18 @@ function initUI(
   myPlayerId: PlayerId | undefined,
   gameStarted: boolean = false,
   boardType: number | null = null,
-  pieceType: number | null = null
+  pieceType: number | null = null,
+  playerPieceSelectionsFromServer: Record<string, number | null> = {},
+  playerBoardSelectionsFromServer: Record<string, number | null> = {}
 ) {
   // Save your player ID
   yourPlayerId = myPlayerId
 
-  // Check if it's your turn (first player gets to choose)
-  isYourTurn = playerIds.length > 0 && playerIds[0] === myPlayerId
-
   // Update saved selections
   selectedBoardType = boardType
   selectedPieceType = pieceType
+  playerPieceSelections = playerPieceSelectionsFromServer
+  playerBoardSelections = playerBoardSelectionsFromServer
 
   // If game started, switch to game page
   if (gameStarted) {
@@ -192,73 +209,63 @@ function initUI(
     playerElements.push(player2Element)
   }
 
-  // Setup board type selection
+  // Setup board type selection (both players can select any board)
   const boardOptions = boardTypes.querySelectorAll(".board-option")
   boardOptions.forEach((option, index) => {
     // Remove old event listeners by cloning and replacing
     const newOption = option.cloneNode(true) as HTMLElement
     option.parentNode?.replaceChild(newOption, option)
 
-    if (selectedBoardType === index) {
-      newOption.classList.add("selected")
-    }
-
-    if (!isYourTurn) {
-      newOption.classList.add("disabled")
-    } else {
-      newOption.addEventListener("click", () => {
-        if (selectedBoardType === index) {
-          // Deselect if already selected
-          selectedBoardType = null
-          newOption.classList.remove("selected")
-        } else {
-          // Select new option
-          boardOptions.forEach((opt) => opt.classList.remove("selected"))
-          newOption.classList.add("selected")
-          selectedBoardType = index
-        }
-
-        // Send selection to server
-        Rune.actions.updateBoardSelection(selectedBoardType)
-        updateStartButton()
+    newOption.addEventListener("click", () => {
+      if (selectedBoardType === index) {
+        // Deselect if this board is already selected globally
+        Rune.actions.updateBoardSelection(null)
         selectSound.play()
-      })
-    }
+      } else {
+        // Select new board type (replaces any previous selection)
+        Rune.actions.updateBoardSelection(index)
+        selectSound.play()
+      }
+    })
   })
 
-  // Setup piece type selection
+  // Setup piece type selection (both players can select)
   const pieceOptions = pieceTypes.querySelectorAll(".piece-option")
   pieceOptions.forEach((option, index) => {
     // Remove old event listeners by cloning and replacing
     const newOption = option.cloneNode(true) as HTMLElement
     option.parentNode?.replaceChild(newOption, option)
 
-    if (selectedPieceType === index) {
-      newOption.classList.add("selected")
-    }
+    newOption.addEventListener("click", () => {
+      const currentPlayerSelection = playerPieceSelections[myPlayerId || ""]
 
-    if (!isYourTurn) {
-      newOption.classList.add("disabled")
-    } else {
-      newOption.addEventListener("click", () => {
-        if (selectedPieceType === index) {
-          // Deselect if already selected
-          selectedPieceType = null
-          newOption.classList.remove("selected")
-        } else {
-          // Select new option
-          pieceOptions.forEach((opt) => opt.classList.remove("selected"))
-          newOption.classList.add("selected")
-          selectedPieceType = index
-        }
-
-        // Send selection to server
-        Rune.actions.updatePieceSelection(selectedPieceType)
-        updateStartButton()
+      if (currentPlayerSelection === index) {
+        // Deselect if already selected by current player
+        Rune.actions.updatePieceSelection(null)
         selectSound.play()
-      })
-    }
+      } else {
+        // Check if this piece is already selected by another player
+        const otherPlayerHasThisPiece = Object.entries(
+          playerPieceSelections
+        ).some(
+          ([playerId, selection]) =>
+            playerId !== myPlayerId && selection === index
+        )
+
+        if (!otherPlayerHasThisPiece) {
+          // Select new option
+          Rune.actions.updatePieceSelection(index)
+          selectSound.play()
+        }
+      }
+    })
   })
+
+  // Update piece selection UI
+  updatePieceSelectionUI()
+
+  // Update board selection UI
+  updateBoardSelectionUI()
 
   // Setup start button
   startButton.removeEventListener("click", startButtonHandler)
@@ -271,11 +278,21 @@ function initUI(
  * Start button click handler
  */
 function startButtonHandler() {
-  if (selectedBoardType !== null && selectedPieceType !== null) {
+  const boardSelected = selectedBoardType !== null
+  const playerHasSelectedPiece = Object.keys(playerPieceSelections).length >= 1
+  const bothPlayersSelectedPieces =
+    Object.keys(playerPieceSelections).length >= 2
+
+  // Check conditions for starting the game
+  const canStart =
+    boardSelected &&
+    (isPlayingWithBot ? playerHasSelectedPiece : bothPlayersSelectedPieces)
+
+  if (canStart) {
     // Send start game action
     Rune.actions.startGame({
-      boardType: selectedBoardType,
-      pieceType: selectedPieceType,
+      boardType: selectedBoardType || 0, // fallback value
+      pieceType: selectedPieceType || 0, // fallback value
     })
     selectSound.play()
   }
@@ -283,17 +300,36 @@ function startButtonHandler() {
 
 // Initialize the Rune client
 Rune.initClient({
-  onChange: ({ game, yourPlayerId, action }) => {
+  onChange: ({ game, yourPlayerId }) => {
     // Handle game state changes
-    const { playerIds, boardType, pieceType, gameStarted } = game
+    const {
+      playerIds,
+      boardType,
+      pieceType,
+      gameStarted,
+      playingWithBot,
+      playerPieceSelections: serverPlayerPieceSelections,
+      playerBoardSelections: serverPlayerBoardSelections,
+    } = game
+
+    // Update game mode
+    isPlayingWithBot = playingWithBot || false
 
     // Initialize or update UI
-    initUI(playerIds, yourPlayerId, gameStarted, boardType, pieceType)
+    initUI(
+      playerIds,
+      yourPlayerId,
+      gameStarted,
+      boardType,
+      pieceType,
+      serverPlayerPieceSelections,
+      serverPlayerBoardSelections
+    )
 
-    // If not your turn but there are selections, update the UI to reflect other player's choices
-    if (!isYourTurn && (boardType !== null || pieceType !== null)) {
-      updateSelectionUI(boardType, pieceType)
-    }
+    // Update selection UIs
+    updatePieceSelectionUI()
+    updateBoardSelectionUI()
+    updateStartButton()
 
     // If game started, switch to game page
     if (gameStarted) {

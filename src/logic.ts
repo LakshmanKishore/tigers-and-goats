@@ -9,6 +9,8 @@ export interface GameState {
   freeCells?: boolean
   boardType: number | null
   pieceType: number | null
+  playerBoardSelections: Record<PlayerId, number | null>
+  playerPieceSelections: Record<PlayerId, number | null>
   gameStarted: boolean
   playingWithBot?: boolean
   botTurn?: boolean
@@ -53,6 +55,8 @@ Rune.initLogic({
     playerIds: allPlayerIds,
     boardType: null,
     pieceType: null,
+    playerBoardSelections: {},
+    playerPieceSelections: {},
     gameStarted: false,
     playingWithBot: allPlayerIds.length === 1,
     botTurn: false,
@@ -94,30 +98,83 @@ Rune.initLogic({
       }
     },
     updateBoardSelection: (boardType, { game, playerId }) => {
-      // Only the first player can select the board type
-      if (game.playerIds[0] !== playerId) {
-        throw Rune.invalidAction()
-      }
+      // Both players can select board, but only one board type for the entire game
+      if (boardType === null) {
+        // Player is deselecting - clear the global board type
+        game.boardType = null
+        game.playerBoardSelections = {}
+      } else {
+        // If the same board type is already selected, do nothing
+        if (game.boardType === boardType) {
+          return
+        }
 
-      game.boardType = boardType
+        // Set the new board type for the entire game
+        game.boardType = boardType
+        // Clear all previous selections and set this as the global selection
+        game.playerBoardSelections = {}
+        // Mark that this player made the selection (for UI feedback)
+        game.playerBoardSelections[playerId] = boardType
+      }
     },
     updatePieceSelection: (pieceType, { game, playerId }) => {
-      // Only the first player can select the piece type
-      if (game.playerIds[0] !== playerId) {
-        throw Rune.invalidAction()
+      // Both players can select pieces, but not the same one
+      if (pieceType === null) {
+        // Player is deselecting their choice
+        delete game.playerPieceSelections[playerId]
+      } else {
+        // Check if another player has already selected this piece
+        const otherPlayerHasThisPiece = Object.entries(
+          game.playerPieceSelections
+        ).some(
+          ([otherPlayerId, selection]) =>
+            otherPlayerId !== playerId && selection === pieceType
+        )
+
+        if (otherPlayerHasThisPiece) {
+          throw Rune.invalidAction()
+        }
+
+        // Set the player's selection
+        game.playerPieceSelections[playerId] = pieceType
       }
 
-      game.pieceType = pieceType
+      // Update the global pieceType for backward compatibility
+      // Use the first player's selection if available, otherwise the second player's
+      const player1Selection = game.playerPieceSelections[game.playerIds[0]]
+      const player2Selection = game.playerPieceSelections[game.playerIds[1]]
+
+      if (player1Selection !== undefined) {
+        game.pieceType = player1Selection
+      } else if (player2Selection !== undefined) {
+        game.pieceType = player2Selection
+      } else {
+        game.pieceType = null
+      }
     },
     startGame: (options, { game, playerId }) => {
-      // Only the first player can start the game
-      if (game.playerIds[0] !== playerId) {
+      // Any player can start the game
+      if (!game.playerIds.includes(playerId)) {
         throw Rune.invalidAction()
       }
 
-      // Validate that both board and piece types are selected
-      if (options.boardType === null || options.pieceType === null) {
-        throw Rune.invalidAction()
+      // Validate conditions based on game mode
+      if (game.playingWithBot) {
+        // Single player mode: only need board type and single player piece selection
+        if (
+          game.boardType === null ||
+          Object.keys(game.playerPieceSelections).length < 1
+        ) {
+          throw Rune.invalidAction()
+        }
+      } else {
+        // Multiplayer mode: need board type and both players have selected pieces
+        if (
+          game.boardType === null ||
+          Object.keys(game.playerPieceSelections).length < 2
+        ) {
+          throw Rune.invalidAction()
+        }
       }
 
       // Set game configuration

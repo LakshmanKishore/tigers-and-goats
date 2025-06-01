@@ -118,11 +118,58 @@ h1 {
   transform: translateY(-2px);
 }
 
+/* Default selection styles (kept for backward compatibility) */
 .board-option.selected,
 .piece-option.selected {
   border-color: #4caf50;
   background-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 3px 6px rgba(76, 175, 80, 0.3);
+}
+
+/* Player-specific board selection styles */
+.board-option.selected-player-0 {
+  border-color: #ff6b35;
+  background-color: rgba(255, 107, 53, 0.2);
+  box-shadow: 0 3px 6px rgba(255, 107, 53, 0.4);
+}
+
+.board-option.selected-player-1 {
+  border-color: #4285f4;
+  background-color: rgba(66, 133, 244, 0.2);
+  box-shadow: 0 3px 6px rgba(66, 133, 244, 0.4);
+}
+
+/* When multiple players select the same board */
+.board-option.selected-multiple {
+  border: 3px solid;
+  border-image: linear-gradient(45deg, #ff6b35, #4285f4, #ff6b35, #4285f4) 1;
+  background: linear-gradient(45deg, rgba(255, 107, 53, 0.1), rgba(66, 133, 244, 0.1));
+  box-shadow: 0 3px 6px rgba(255, 107, 53, 0.2), 0 3px 6px rgba(66, 133, 244, 0.2);
+}
+
+.board-option.disabled-by-other {
+  opacity: 0.3;
+  pointer-events: none;
+  background-color: rgba(128, 128, 128, 0.1);
+}
+
+/* Player-specific piece selection styles */
+.piece-option.selected-player-0 {
+  border-color: #ff6b35;
+  background-color: rgba(255, 107, 53, 0.2);
+  box-shadow: 0 3px 6px rgba(255, 107, 53, 0.4);
+}
+
+.piece-option.selected-player-1 {
+  border-color: #4285f4;
+  background-color: rgba(66, 133, 244, 0.2);
+  box-shadow: 0 3px 6px rgba(66, 133, 244, 0.4);
+}
+
+.piece-option.disabled-by-other {
+  opacity: 0.3;
+  pointer-events: none;
+  background-color: rgba(128, 128, 128, 0.1);
 }
 
 .board-option.disabled,
