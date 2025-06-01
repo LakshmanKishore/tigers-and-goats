@@ -6,6 +6,13 @@ export interface Cell {
   playerId: PlayerId | null
   reachableCellIndexes: number[]
 }
+export interface PiecesCount {
+  goatCount: 15 | 20
+  tigerCount: 3 | 4
+  tigerBlockedCount: number
+  goatsTakenCount: number
+  goatsRemainingCount: number
+}
 
 export type Cells = Cell[]
 export interface GameState {
@@ -22,10 +29,12 @@ export interface GameState {
   playingWithBot?: boolean
   botTurn?: boolean
   botTurnAt?: number
+  selectedCellIndex: number
+  piecesCount: PiecesCount
 }
 
 type GameActions = {
-  claimCell: (cellIndex: number) => void
+  performCellAction: (cellIndex: number) => void
   updateBoardSelection: (boardType: number | null) => void
   updatePieceSelection: (pieceType: number | null) => void
   startGame: (options: { boardType: number; pieceType: number }) => void
@@ -38,29 +47,38 @@ declare global {
 // Board A - 23 intersection points (0-22)
 const cellsForBoardA: Cell[] = [
   // To get the correct coordinates, use the getIntersection function commented at the bottom of this file and pass the elements from the client file.
-  { x: 100, y: 300, playerId: null, reachableCellIndexes: [1, 9] },
-  { x: 700, y: 300, playerId: null, reachableCellIndexes: [0, 2, 4] },
-  { x: 235, y: 300, playerId: null, reachableCellIndexes: [1, 3] },
-  { x: 565, y: 300, playerId: null, reachableCellIndexes: [0, 10, 17] },
-  { x: 340, y: 300, playerId: null, reachableCellIndexes: [9, 11] },
-  { x: 460, y: 300, playerId: null, reachableCellIndexes: [2, 4] },
-  { x: 100, y: 400, playerId: null, reachableCellIndexes: [1, 3, 5, 11] },
-  { x: 100, y: 200, playerId: null, reachableCellIndexes: [4, 6] },
-  { x: 700, y: 400, playerId: null, reachableCellIndexes: [5, 7] },
-  { x: 180, y: 400, playerId: null, reachableCellIndexes: [6, 8] },
-  { x: 620, y: 400, playerId: null, reachableCellIndexes: [7, 16] },
-  { x: 320, y: 400, playerId: null, reachableCellIndexes: [4, 10, 12] },
-  { x: 480, y: 400, playerId: null, reachableCellIndexes: [11, 13] },
-  { x: 700, y: 200, playerId: null, reachableCellIndexes: [12, 14, 16] },
-  { x: 290, y: 200, playerId: null, reachableCellIndexes: [13, 15] },
-  { x: 510, y: 200, playerId: null, reachableCellIndexes: [14, 16] },
-  { x: 360, y: 200, playerId: null, reachableCellIndexes: [8, 13, 15] },
-  { x: 440, y: 200, playerId: null, reachableCellIndexes: [9, 18] },
-  { x: 125, y: 500, playerId: null, reachableCellIndexes: [17, 19] },
-  { x: 400, y: 0, playerId: null, reachableCellIndexes: [18, 20] },
-  { x: 675, y: 500, playerId: null, reachableCellIndexes: [19, 21] },
-  { x: 300, y: 500, playerId: null, reachableCellIndexes: [20, 22] },
-  { x: 500, y: 500, playerId: null, reachableCellIndexes: [21] },
+  // Top (y=0)
+  { x: 400, y: 0, playerId: null, reachableCellIndexes: [18, 20] }, // 19
+
+  // Second row (y=200)
+  { x: 100, y: 200, playerId: null, reachableCellIndexes: [4, 6] }, // 7
+  { x: 290, y: 200, playerId: null, reachableCellIndexes: [13, 15] }, // 14
+  { x: 360, y: 200, playerId: null, reachableCellIndexes: [8, 13, 15] }, // 16
+  { x: 440, y: 200, playerId: null, reachableCellIndexes: [9, 18] }, // 17
+  { x: 510, y: 200, playerId: null, reachableCellIndexes: [14, 16] }, // 15
+  { x: 700, y: 200, playerId: null, reachableCellIndexes: [12, 14, 16] }, // 13
+
+  // Middle row (y=300)
+  { x: 100, y: 300, playerId: null, reachableCellIndexes: [1, 9] }, // 0
+  { x: 235, y: 300, playerId: null, reachableCellIndexes: [1, 3] }, // 2
+  { x: 340, y: 300, playerId: null, reachableCellIndexes: [9, 11] }, // 4
+  { x: 460, y: 300, playerId: null, reachableCellIndexes: [2, 4] }, // 5
+  { x: 565, y: 300, playerId: null, reachableCellIndexes: [0, 10, 17] }, // 3
+  { x: 700, y: 300, playerId: null, reachableCellIndexes: [0, 2, 4] }, // 1
+
+  // Fourth row (y=400)
+  { x: 100, y: 400, playerId: null, reachableCellIndexes: [1, 3, 5, 11] }, // 6
+  { x: 180, y: 400, playerId: null, reachableCellIndexes: [6, 8] }, // 9
+  { x: 320, y: 400, playerId: null, reachableCellIndexes: [4, 10, 12] }, // 11
+  { x: 480, y: 400, playerId: null, reachableCellIndexes: [11, 13] }, // 12
+  { x: 620, y: 400, playerId: null, reachableCellIndexes: [7, 16] }, // 10
+  { x: 700, y: 400, playerId: null, reachableCellIndexes: [5, 7] }, // 8
+
+  // Bottom row (y=500)
+  { x: 125, y: 500, playerId: null, reachableCellIndexes: [17, 19] }, // 18
+  { x: 300, y: 500, playerId: null, reachableCellIndexes: [20, 22] }, // 21
+  { x: 500, y: 500, playerId: null, reachableCellIndexes: [21] }, // 22
+  { x: 675, y: 500, playerId: null, reachableCellIndexes: [19, 21] }, // 20
 ]
 
 // Board B - 25 intersection points (0-24)
@@ -101,25 +119,25 @@ const cellsForBoardB: Cell[] = [
   { x: 240, y: 240, playerId: null, reachableCellIndexes: [19, 23] },
 ]
 
-function findWinningCombo(cells: Cells) {
-  return (
-    [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ].find((combo) =>
-      combo.every(
-        (i) =>
-          cells[i]?.playerId && cells[i].playerId === cells[combo[0]].playerId
-      )
-    ) || null
-  )
-}
+// function findWinningCombo(cells: Cells) {
+//   return (
+//     [
+//       [0, 1, 2],
+//       [3, 4, 5],
+//       [6, 7, 8],
+//       [0, 3, 6],
+//       [1, 4, 7],
+//       [2, 5, 8],
+//       [0, 4, 8],
+//       [2, 4, 6],
+//     ].find((combo) =>
+//       combo.every(
+//         (i) =>
+//           cells[i]?.playerId && cells[i].playerId === cells[combo[0]].playerId
+//       )
+//     ) || null
+//   )
+// }
 
 Rune.initLogic({
   minPlayers: 1,
@@ -132,47 +150,142 @@ Rune.initLogic({
     boardType: null,
     pieceType: null,
     playerBoardSelections: {},
+    // Here 0 -> Tiger and 1 is for Goat
     playerPieceSelections: {},
     gameStarted: false,
     playingWithBot: allPlayerIds.length === 1,
     botTurn: false,
     botTurnAt: 0,
+    selectedCellIndex: -1,
+    piecesCount: {
+      goatCount: 15,
+      tigerCount: 3,
+      tigerBlockedCount: 0,
+      goatsTakenCount: 0,
+      goatsRemainingCount: 0,
+    },
   }),
   actions: {
-    claimCell: (cellIndex, { game, playerId, allPlayerIds }) => {
+    performCellAction: (cellIndex, { game, playerId /*, allPlayerIds*/ }) => {
+      // if (
+      //   game.cells[cellIndex]?.playerId !== null ||
+      //   playerId === game.lastMovePlayerId
+      // ) {
+      //   throw Rune.invalidAction()
+      // }
+
+      // Check if the click is coming from the lastMovePlayerId
+      if (game.lastMovePlayerId && game.lastMovePlayerId === playerId) {
+        // Don't take the click if it's not the player's turn
+        console.log("It's not your turn.")
+        return
+      }
+
+      // Whenever it's tigers turn, then the player should only click on the existing cell and not on the empty cell.
       if (
-        game.cells[cellIndex]?.playerId !== null ||
-        playerId === game.lastMovePlayerId
+        game.playerPieceSelections[playerId] === 0 &&
+        game.cells[cellIndex].playerId !== playerId &&
+        game.selectedCellIndex === -1
       ) {
-        throw Rune.invalidAction()
+        // return and don't take that click
+        console.log("Tiger clicked on the empty cell")
+        return
       }
 
-      game.cells[cellIndex].playerId = playerId
-      game.lastMovePlayerId = playerId
-      game.winCombo = findWinningCombo(game.cells)
-
-      if (game.winCombo) {
-        const [player1, player2] = allPlayerIds
-
-        Rune.gameOver({
-          players: {
-            [player1]: game.lastMovePlayerId === player1 ? "WON" : "LOST",
-            [player2]: game.lastMovePlayerId === player2 ? "WON" : "LOST",
-          },
-        })
+      // If there are no goats to place then if the player has clicked on the empty cell then just return
+      if (game.playerPieceSelections[playerId] === 1) {
+        if (
+          game.piecesCount.goatsRemainingCount === 0 &&
+          game.cells[cellIndex].playerId === null
+        ) {
+          console.log("Goat clicked on the empty cell")
+          return
+        }
+        // If the goat has clicked on the non null cell when the goats are remaining then just return
+        if (
+          game.cells[cellIndex].playerId !== null &&
+          game.piecesCount.goatsRemainingCount > 0
+        ) {
+          console.log("Goat clicked on the non-null cell")
+          return
+        }
       }
 
-      game.freeCells =
-        game.cells.findIndex((cell) => cell.playerId === null) !== -1
+      if (game.selectedCellIndex !== -1) {
+        // During this time the current cell should be moved to another cell
+        const selectedCell = game.cells[game.selectedCellIndex]
+        game.cells[cellIndex].playerId = selectedCell.playerId
+        game.cells[game.selectedCellIndex].playerId = null
 
-      if (!game.freeCells) {
-        Rune.gameOver({
-          players: {
-            [game.playerIds[0]]: "LOST",
-            [game.playerIds[1]]: "LOST",
-          },
-        })
+        // Reset the selected cell index after moving
+        game.selectedCellIndex = -1
+      } else {
+        // Update selected cell index for tiger moves and only when all the goats are placed
+        if (
+          (game.playerPieceSelections[playerId] === 1 &&
+            game.piecesCount.goatsRemainingCount === 0) ||
+          game.playerPieceSelections[playerId] === 0
+        ) {
+          game.selectedCellIndex = cellIndex
+        }
       }
+
+      if (game.piecesCount.goatsRemainingCount > 0) {
+        game.cells[cellIndex].playerId = playerId
+      }
+      // If it's goats turn then reduce the goats remaining count
+      if (
+        game.playerPieceSelections[playerId] === 1 &&
+        game.piecesCount.goatsRemainingCount > 0
+      ) {
+        game.piecesCount.goatsRemainingCount -= 1
+      }
+
+      // game.winCombo = findWinningCombo(game.cells)
+
+      // Update the last move player id only when the opponent turn has completed
+      // if (game.selectedCellIndex === -1) {
+      //   game.lastMovePlayerId = playerId
+      // }
+      if (game.playerPieceSelections[playerId] === 0) {
+        if (game.selectedCellIndex === -1) {
+          game.lastMovePlayerId = playerId
+        }
+      } else if (game.playerPieceSelections[playerId] === 1) {
+        if (
+          game.piecesCount.goatsRemainingCount === 0 &&
+          game.selectedCellIndex === -1
+        ) {
+          // If the goats are placed and it's the goat's turn then update the last move player id
+          game.lastMovePlayerId = playerId
+        } else if (game.piecesCount.goatsRemainingCount > 0) {
+          // If the goats are not placed then update the last move player id
+          game.lastMovePlayerId = playerId
+        }
+      }
+
+      // if (game.winCombo) {
+      //   const [player1, player2] = allPlayerIds
+
+      //   Rune.gameOver({
+      //     players: {
+      //       [player1]: game.lastMovePlayerId === player1 ? "WON" : "LOST",
+      //       [player2]: game.lastMovePlayerId === player2 ? "WON" : "LOST",
+      //     },
+      //   })
+      // }
+
+      // game.freeCells =
+      //   game.cells.findIndex((cell) => cell.playerId === null) !== -1
+
+      // if (!game.freeCells) {
+      //   Rune.gameOver({
+      //     players: {
+      //       [game.playerIds[0]]: "LOST",
+      //       [game.playerIds[1]]: "LOST",
+      //     },
+      //   })
+      // }
     },
     updateBoardSelection: (boardType, { game, playerId }) => {
       // Both players can select board, but only one board type for the entire game
@@ -213,6 +326,7 @@ Rune.initLogic({
         }
 
         // Set the player's selection
+        // Here 0 -> Tiger and 1 is for Goat
         game.playerPieceSelections[playerId] = pieceType
       }
 
@@ -254,6 +368,19 @@ Rune.initLogic({
         }
       }
 
+      // If it's playing with bot then the bot player should have a piece selection
+      if (game.playingWithBot) {
+        if (
+          !game.playerPieceSelections["bot"] ||
+          game.playerPieceSelections["bot"] === null
+        ) {
+          // Set the opposite piece type for the bot
+          const otherPlayerSelection =
+            game.playerPieceSelections[playerId] || null
+          game.playerPieceSelections["bot"] = otherPlayerSelection === 0 ? 1 : 0
+        }
+      }
+
       // Set game configuration
       game.boardType = options.boardType
       game.pieceType = options.pieceType
@@ -266,6 +393,29 @@ Rune.initLogic({
       }
 
       game.gameStarted = true
+      // Update the goats count and the tiger count
+      game.piecesCount.goatCount = game.boardType === 0 ? 15 : 20
+      game.piecesCount.tigerCount = game.boardType === 0 ? 3 : 4
+      game.piecesCount.goatsRemainingCount = game.piecesCount.goatCount
+
+      const tigerPlayerId =
+        Object.keys(game.playerPieceSelections).find(
+          (playerId) => game.playerPieceSelections[playerId] === 0
+        ) || null
+
+      game.lastMovePlayerId = tigerPlayerId
+
+      // Once the game is started, the tigers will be placed first
+      if (game.boardType == 0) {
+        game.cells[0] = { ...game.cells[0], playerId: tigerPlayerId }
+        game.cells[3] = { ...game.cells[3], playerId: tigerPlayerId }
+        game.cells[4] = { ...game.cells[4], playerId: tigerPlayerId }
+      } else if (game.boardType == 1) {
+        game.cells[0] = { ...game.cells[0], playerId: tigerPlayerId }
+        game.cells[4] = { ...game.cells[4], playerId: tigerPlayerId }
+        game.cells[20] = { ...game.cells[20], playerId: tigerPlayerId }
+        game.cells[24] = { ...game.cells[24], playerId: tigerPlayerId }
+      }
     },
   },
   events: {

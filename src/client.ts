@@ -1,6 +1,6 @@
 import "./styles.css"
 
-import { PlayerId } from "rune-sdk"
+import { Player, PlayerId } from "rune-sdk"
 
 import selectSoundAudio from "./assets/select.wav"
 import robotImage from "./assets/robot.png"
@@ -48,7 +48,7 @@ const FILL_COLOR = "#ff6b35" // Orange color for clickable indication
 
 // Board-specific sizing constants
 const BOARD_A_ELLIPSE_SIZE = "8" // Smaller for Board A's larger coordinate system
-const BOARD_A_CELL_SIZE = "12"
+const BOARD_A_CELL_SIZE = "35"
 const BOARD_B_ELLIPSE_SIZE = "5" // Larger for Board B's smaller coordinate system
 const BOARD_B_CELL_SIZE = "20"
 
@@ -298,7 +298,7 @@ function createCellElements(
     // Add click event listener for valid players
     if (yourPlayerId && playerIds.includes(yourPlayerId)) {
       image.addEventListener("click", () => {
-        Rune.actions.claimCell(index)
+        Rune.actions.performCellAction(index)
       })
       image.style.cursor = "pointer"
     }
@@ -318,6 +318,68 @@ function createCellElements(
   })
 
   return cellImages
+}
+
+function updateCellImages({
+  game,
+}: {
+  game: {
+    cells: GameCell[]
+    playerIds: string[]
+    selectedCellIndex: number
+  }
+}) {
+  const { cells, playerIds, selectedCellIndex } = game
+
+  // Skip if cellImages not initialized yet
+  if (cellImages.length === 0) {
+    return
+  }
+
+  // Get all the player ids information
+  const playersInfo = playerIds.reduce(
+    (acc: { [playerId: string]: Player }, playerId: string) => {
+      if (playerId === "bot") return acc
+      const info: Player | null = Rune.getPlayerInfo(playerId)
+      if (info) {
+        acc[playerId] = info
+      }
+      return acc
+    },
+    {} as { [playerId: string]: Player }
+  )
+
+  const botPlayerInfo: Player = {
+    displayName: "Bot",
+    avatarUrl: robotImage,
+    playerId: "bot",
+  }
+
+  playersInfo["bot"] = botPlayerInfo
+
+  cellImages.forEach((cellImage, index) => {
+    if (!cells[index]) return // Safety check
+
+    const cellValue: string | null = cells[index].playerId
+
+    cellImage.setAttribute(
+      "player",
+      (cellValue !== null ? playerIds.indexOf(cellValue) : -1).toString()
+    )
+
+    // If cell has a player id then have to show player id's avatar
+    if (cellValue && playersInfo[cellValue]) {
+      cellImage.setAttribute("href", playersInfo[cellValue].avatarUrl)
+    } else {
+      cellImage.setAttribute("href", "")
+    }
+
+    // If the cell is a selected cell then we should dim it
+    if (selectedCellIndex === index) {
+      // cellImage.setAttribute("class", "dimmed")
+      cellImage.style.opacity = "0.5"
+    }
+  })
 }
 
 /**
@@ -481,7 +543,7 @@ function initUI(
   playersSection.innerHTML = "" // Clear existing content
   playerElements = []
 
-  // Create player display section based on number of players
+  // Create player display section based on number of players and bot status
   if (playerIds.length === 0) {
     // No players yet
     const playerElement = document.createElement("div")
@@ -489,17 +551,22 @@ function initUI(
     playerElement.textContent = "Waiting for players..."
     playersSection.appendChild(playerElement)
     playerElements.push(playerElement)
-  } else if (playerIds.length === 1) {
-    // Single player with robot opponent
-    const playerElement = document.createElement("div")
-    const player = Rune.getPlayerInfo(playerIds[0])
-    playerElement.classList.add("player")
-    playerElement.innerHTML = `
-      <img src="${player.avatarUrl}" alt="Player Avatar" />
-      <span>${player.displayName}${player.playerId === yourPlayerId ? " (You)" : ""}</span>
-    `
-    playersSection.appendChild(playerElement)
-    playerElements.push(playerElement)
+  } else if (isPlayingWithBot) {
+    // Playing with bot - show the real player first, then bot
+    const realPlayerIds = playerIds.filter((id) => id !== "bot")
+    if (realPlayerIds.length > 0) {
+      const playerInfo = Rune.getPlayerInfo(realPlayerIds[0])
+      if (playerInfo) {
+        const playerElement = document.createElement("div")
+        playerElement.classList.add("player")
+        playerElement.innerHTML = `
+          <img src="${playerInfo.avatarUrl}" alt="Player Avatar" />
+          <span>${playerInfo.displayName}${playerInfo.playerId === yourPlayerId ? " (You)" : ""}</span>
+        `
+        playersSection.appendChild(playerElement)
+        playerElements.push(playerElement)
+      }
+    }
 
     // Robot opponent
     const robotElement = document.createElement("div")
@@ -511,26 +578,32 @@ function initUI(
     playersSection.appendChild(robotElement)
     playerElements.push(robotElement)
   } else {
-    // Two or more players (we'll show only the first two)
-    const player1 = Rune.getPlayerInfo(playerIds[0])
-    const player1Element = document.createElement("div")
-    player1Element.classList.add("player")
-    player1Element.innerHTML = `
-      <img src="${player1.avatarUrl}" alt="${player1.displayName}" />
-      <span>${player1.displayName}${player1.playerId === yourPlayerId ? " (You)" : ""}</span>
-    `
-    playersSection.appendChild(player1Element)
-    playerElements.push(player1Element)
+    // Two or more real players (we'll show only the first two)
+    const player1Info = Rune.getPlayerInfo(playerIds[0])
+    if (player1Info) {
+      const player1Element = document.createElement("div")
+      player1Element.classList.add("player")
+      player1Element.innerHTML = `
+        <img src="${player1Info.avatarUrl}" alt="${player1Info.displayName}" />
+        <span>${player1Info.displayName}${player1Info.playerId === yourPlayerId ? " (You)" : ""}</span>
+      `
+      playersSection.appendChild(player1Element)
+      playerElements.push(player1Element)
+    }
 
-    const player2 = Rune.getPlayerInfo(playerIds[1])
-    const player2Element = document.createElement("div")
-    player2Element.classList.add("player")
-    player2Element.innerHTML = `
-      <img src="${player2.avatarUrl}" alt="${player2.displayName}" />
-      <span>${player2.displayName}${player2.playerId === yourPlayerId ? " (You)" : ""}</span>
-    `
-    playersSection.appendChild(player2Element)
-    playerElements.push(player2Element)
+    if (playerIds.length > 1) {
+      const player2Info = Rune.getPlayerInfo(playerIds[1])
+      if (player2Info) {
+        const player2Element = document.createElement("div")
+        player2Element.classList.add("player")
+        player2Element.innerHTML = `
+          <img src="${player2Info.avatarUrl}" alt="${player2Info.displayName}" />
+          <span>${player2Info.displayName}${player2Info.playerId === yourPlayerId ? " (You)" : ""}</span>
+        `
+        playersSection.appendChild(player2Element)
+        playerElements.push(player2Element)
+      }
+    }
   }
 
   // Setup board type selection (both players can select any board)
@@ -658,5 +731,7 @@ Rune.initClient({
     if (gameStarted && cells) {
       switchToGamePage(cells, playerIds)
     }
+
+    updateCellImages({ game })
   },
 })
