@@ -1,6 +1,13 @@
 import type { PlayerId, RuneClient } from "rune-sdk"
 
-export type Cells = (PlayerId | null)[]
+export interface Cell {
+  x: number
+  y: number
+  playerId: PlayerId | null
+  reachableCellIndexes: number[]
+}
+
+export type Cells = Cell[]
 export interface GameState {
   cells: Cells
   winCombo: number[] | null
@@ -28,6 +35,72 @@ declare global {
   const Rune: RuneClient<GameState, GameActions>
 }
 
+// Board A - 23 intersection points (0-22)
+const cellsForBoardA: Cell[] = [
+  // To get the correct coordinates, use the getIntersection function commented at the bottom of this file and pass the elements from the client file.
+  { x: 100, y: 300, playerId: null, reachableCellIndexes: [1, 9] },
+  { x: 700, y: 300, playerId: null, reachableCellIndexes: [0, 2, 4] },
+  { x: 235, y: 300, playerId: null, reachableCellIndexes: [1, 3] },
+  { x: 565, y: 300, playerId: null, reachableCellIndexes: [0, 10, 17] },
+  { x: 340, y: 300, playerId: null, reachableCellIndexes: [9, 11] },
+  { x: 460, y: 300, playerId: null, reachableCellIndexes: [2, 4] },
+  { x: 100, y: 400, playerId: null, reachableCellIndexes: [1, 3, 5, 11] },
+  { x: 100, y: 200, playerId: null, reachableCellIndexes: [4, 6] },
+  { x: 700, y: 400, playerId: null, reachableCellIndexes: [5, 7] },
+  { x: 180, y: 400, playerId: null, reachableCellIndexes: [6, 8] },
+  { x: 620, y: 400, playerId: null, reachableCellIndexes: [7, 16] },
+  { x: 320, y: 400, playerId: null, reachableCellIndexes: [4, 10, 12] },
+  { x: 480, y: 400, playerId: null, reachableCellIndexes: [11, 13] },
+  { x: 700, y: 200, playerId: null, reachableCellIndexes: [12, 14, 16] },
+  { x: 290, y: 200, playerId: null, reachableCellIndexes: [13, 15] },
+  { x: 510, y: 200, playerId: null, reachableCellIndexes: [14, 16] },
+  { x: 360, y: 200, playerId: null, reachableCellIndexes: [8, 13, 15] },
+  { x: 440, y: 200, playerId: null, reachableCellIndexes: [9, 18] },
+  { x: 125, y: 500, playerId: null, reachableCellIndexes: [17, 19] },
+  { x: 400, y: 0, playerId: null, reachableCellIndexes: [18, 20] },
+  { x: 675, y: 500, playerId: null, reachableCellIndexes: [19, 21] },
+  { x: 300, y: 500, playerId: null, reachableCellIndexes: [20, 22] },
+  { x: 500, y: 500, playerId: null, reachableCellIndexes: [21] },
+]
+
+// Board B - 25 intersection points (0-24)
+const cellsForBoardB: Cell[] = [
+  // Top row (5 points)
+  { x: 0, y: 0, playerId: null, reachableCellIndexes: [1, 5] },
+  { x: 60, y: 0, playerId: null, reachableCellIndexes: [0, 2, 6] },
+  { x: 120, y: 0, playerId: null, reachableCellIndexes: [1, 3, 7] },
+  { x: 180, y: 0, playerId: null, reachableCellIndexes: [2, 4, 8] },
+  { x: 240, y: 0, playerId: null, reachableCellIndexes: [3, 9] },
+
+  // Second row (5 points)
+  { x: 0, y: 60, playerId: null, reachableCellIndexes: [0, 6, 10] },
+  { x: 60, y: 60, playerId: null, reachableCellIndexes: [1, 5, 7, 11, 12] },
+  { x: 120, y: 60, playerId: null, reachableCellIndexes: [2, 6, 8, 12] },
+  { x: 180, y: 60, playerId: null, reachableCellIndexes: [3, 7, 9, 13, 14] },
+  { x: 240, y: 60, playerId: null, reachableCellIndexes: [4, 8, 14] },
+
+  // Third row (5 points)
+  { x: 0, y: 120, playerId: null, reachableCellIndexes: [5, 11, 15] },
+  { x: 60, y: 120, playerId: null, reachableCellIndexes: [6, 10, 12, 16] },
+  { x: 120, y: 120, playerId: null, reachableCellIndexes: [6, 7, 11, 13, 17] },
+  { x: 180, y: 120, playerId: null, reachableCellIndexes: [8, 12, 14, 18] },
+  { x: 240, y: 120, playerId: null, reachableCellIndexes: [8, 9, 13, 19] },
+
+  // Fourth row (5 points)
+  { x: 0, y: 180, playerId: null, reachableCellIndexes: [10, 16, 20] },
+  { x: 60, y: 180, playerId: null, reachableCellIndexes: [11, 15, 17, 21] },
+  { x: 120, y: 180, playerId: null, reachableCellIndexes: [12, 16, 18, 22] },
+  { x: 180, y: 180, playerId: null, reachableCellIndexes: [13, 17, 19, 23] },
+  { x: 240, y: 180, playerId: null, reachableCellIndexes: [14, 18, 24] },
+
+  // Bottom row (5 points)
+  { x: 0, y: 240, playerId: null, reachableCellIndexes: [15, 21] },
+  { x: 60, y: 240, playerId: null, reachableCellIndexes: [16, 20, 22] },
+  { x: 120, y: 240, playerId: null, reachableCellIndexes: [17, 21, 23] },
+  { x: 180, y: 240, playerId: null, reachableCellIndexes: [18, 22, 24] },
+  { x: 240, y: 240, playerId: null, reachableCellIndexes: [19, 23] },
+]
+
 function findWinningCombo(cells: Cells) {
   return (
     [
@@ -40,7 +113,10 @@ function findWinningCombo(cells: Cells) {
       [0, 4, 8],
       [2, 4, 6],
     ].find((combo) =>
-      combo.every((i) => cells[i] && cells[i] === cells[combo[0]])
+      combo.every(
+        (i) =>
+          cells[i]?.playerId && cells[i].playerId === cells[combo[0]].playerId
+      )
     ) || null
   )
 }
@@ -49,7 +125,7 @@ Rune.initLogic({
   minPlayers: 1,
   maxPlayers: 2,
   setup: (allPlayerIds) => ({
-    cells: new Array(9).fill(null),
+    cells: [...cellsForBoardA], // Default to board A, will be updated when game starts
     winCombo: null,
     lastMovePlayerId: null,
     playerIds: allPlayerIds,
@@ -65,13 +141,13 @@ Rune.initLogic({
   actions: {
     claimCell: (cellIndex, { game, playerId, allPlayerIds }) => {
       if (
-        game.cells[cellIndex] !== null ||
+        game.cells[cellIndex]?.playerId !== null ||
         playerId === game.lastMovePlayerId
       ) {
         throw Rune.invalidAction()
       }
 
-      game.cells[cellIndex] = playerId
+      game.cells[cellIndex].playerId = playerId
       game.lastMovePlayerId = playerId
       game.winCombo = findWinningCombo(game.cells)
 
@@ -86,7 +162,8 @@ Rune.initLogic({
         })
       }
 
-      game.freeCells = game.cells.findIndex((cell) => cell === null) !== -1
+      game.freeCells =
+        game.cells.findIndex((cell) => cell.playerId === null) !== -1
 
       if (!game.freeCells) {
         Rune.gameOver({
@@ -180,6 +257,14 @@ Rune.initLogic({
       // Set game configuration
       game.boardType = options.boardType
       game.pieceType = options.pieceType
+
+      // Set the appropriate board cells based on board type
+      if (options.boardType === 0) {
+        game.cells = [...cellsForBoardA]
+      } else {
+        game.cells = [...cellsForBoardB]
+      }
+
       game.gameStarted = true
     },
   },
@@ -195,8 +280,8 @@ Rune.initLogic({
       // If the game has started, update any cells that had bot as player
       if (game.gameStarted) {
         for (let i = 0; i < game.cells.length; i++) {
-          if (game.cells[i] === "bot") {
-            game.cells[i] = playerId
+          if (game.cells[i].playerId === "bot") {
+            game.cells[i].playerId = playerId
           }
         }
       }
@@ -226,8 +311,8 @@ Rune.initLogic({
         // If the game has started, update any cells that had the leaving player
         if (game.gameStarted) {
           for (let i = 0; i < game.cells.length; i++) {
-            if (game.cells[i] === playerId) {
-              game.cells[i] = "bot"
+            if (game.cells[i].playerId === playerId) {
+              game.cells[i].playerId = "bot"
             }
           }
         }
@@ -246,3 +331,110 @@ Rune.initLogic({
     },
   },
 })
+
+// Run this function in the browser by passing the elements to get the coordinates use that in the cellsForBoardA array.
+
+// function findAllIntersectionPoints(elements) {
+//   const intersections = new Map(); // Use Map to avoid duplicates
+
+//   // Helper function to add intersection point
+//   const addIntersection = (x, y) => {
+//     // Round to avoid floating point issues
+//     const key = `${Math.round(x)},${Math.round(y)}`;
+//     intersections.set(key, { x: Math.round(x), y: Math.round(y) });
+//   };
+
+//   // Helper function to find intersection of two line segments
+//   const lineIntersection = (x1, y1, x2, y2, x3, y3, x4, y4) => {
+//     const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+//     if (Math.abs(denom) < 0.0001) return null; // Parallel lines
+
+//     const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+//     const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom;
+
+//     if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+//       return {
+//         x: x1 + t * (x2 - x1),
+//         y: y1 + t * (y2 - y1)
+//       };
+//     }
+//     return null;
+//   };
+
+//   // Extract all line segments from elements
+//   const lineSegments = [];
+
+//   elements.forEach(element => {
+//     if (element.tag === "line") {
+//       lineSegments.push({
+//         x1: parseFloat(element.attrs.x1),
+//         y1: parseFloat(element.attrs.y1),
+//         x2: parseFloat(element.attrs.x2),
+//         y2: parseFloat(element.attrs.y2)
+//       });
+//     } else if (element.tag === "polygon") {
+//       const points = element.attrs.points.split(' ').map(p => parseFloat(p));
+//       for (let i = 0; i < points.length; i += 2) {
+//         const nextI = (i + 2) % points.length;
+//         lineSegments.push({
+//           x1: points[i],
+//           y1: points[i + 1],
+//           x2: points[nextI],
+//           y2: points[nextI + 1]
+//         });
+//       }
+//     } else if (element.tag === "path") {
+//       // Parse the path - assuming it's a simple polygon
+//       const d = element.attrs.d;
+//       const commands = d.match(/[ML]\s*\d+\s+\d+/g);
+//       const pathPoints = commands.map(cmd => {
+//         const nums = cmd.match(/\d+/g);
+//         return { x: parseFloat(nums[0]), y: parseFloat(nums[1]) };
+//       });
+
+//       for (let i = 0; i < pathPoints.length; i++) {
+//         const next = (i + 1) % pathPoints.length;
+//         lineSegments.push({
+//           x1: pathPoints[i].x,
+//           y1: pathPoints[i].y,
+//           x2: pathPoints[next].x,
+//           y2: pathPoints[next].y
+//         });
+//       }
+//     }
+//   });
+
+//   // For the Tigers and Goats board, we also need the middle horizontal line
+//   // This is implicit in the game board structure
+//   lineSegments.push({
+//     x1: 100,
+//     y1: 300,
+//     x2: 700,
+//     y2: 300
+//   });
+
+//   // Find all intersections between line segments
+//   for (let i = 0; i < lineSegments.length; i++) {
+//     for (let j = i + 1; j < lineSegments.length; j++) {
+//       const seg1 = lineSegments[i];
+//       const seg2 = lineSegments[j];
+
+//       const intersection = lineIntersection(
+//         seg1.x1, seg1.y1, seg1.x2, seg1.y2,
+//         seg2.x1, seg2.y1, seg2.x2, seg2.y2
+//       );
+
+//       if (intersection) {
+//         addIntersection(intersection.x, intersection.y);
+//       }
+//     }
+
+//     // Also add endpoints as they are valid positions
+//     addIntersection(lineSegments[i].x1, lineSegments[i].y1);
+//     addIntersection(lineSegments[i].x2, lineSegments[i].y2);
+//   }
+
+//   return Array.from(intersections.values());
+// }
+// const intersectionPoints = findAllIntersectionPoints(elements);
+// console.log(`Found ${intersectionPoints.length} intersection points:`, intersectionPoints);

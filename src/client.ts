@@ -5,6 +5,14 @@ import { PlayerId } from "rune-sdk"
 import selectSoundAudio from "./assets/select.wav"
 import robotImage from "./assets/robot.png"
 
+// Types
+interface GameCell {
+  x: number
+  y: number
+  playerId: string | null
+  reachableCellIndexes: number[]
+}
+
 // DOM Elements
 const playersSection = document.getElementById("playersSection")!
 const startButton = document.getElementById("startButton")! as HTMLButtonElement
@@ -22,10 +30,10 @@ const selectSound = new Audio(selectSoundAudio)
 let selectedBoardType: number | null = null
 let selectedPieceType: number | null = null
 let playerPieceSelections: Record<string, number | null> = {}
-let playerBoardSelections: Record<string, number | null> = {}
 let playerElements: HTMLElement[] = []
 let yourPlayerId: PlayerId | undefined
 let isPlayingWithBot: boolean = false
+let cellImages: SVGImageElement[] = []
 
 // Piece images
 const pieceImages = ["src/assets/tiger.png", "src/assets/goat.png"]
@@ -35,16 +43,25 @@ const BOARD_STROKE_COLOR = "#e6e6e6"
 const BOARD_STROKE_WIDTH = 5
 const BOARD_STROKE_WIDTH_THICK = 2
 
+// Cell/Ellipse styling constants
+const FILL_COLOR = "#ff6b35" // Orange color for clickable indication
+
+// Board-specific sizing constants
+const BOARD_A_ELLIPSE_SIZE = "8" // Smaller for Board A's larger coordinate system
+const BOARD_A_CELL_SIZE = "12"
+const BOARD_B_ELLIPSE_SIZE = "5" // Larger for Board B's smaller coordinate system
+const BOARD_B_CELL_SIZE = "20"
+
 /**
  * Creates BoardA SVG (Triangle/Diamond pattern) dynamically
  * Based on boardA.svg structure
  */
 function createBoardASVG(): SVGElement {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-  svg.setAttribute("viewBox", "0 0 800 520")
+  svg.setAttribute("viewBox", "0 -30 800 550")
   svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-  svg.style.width = "100%"
-  svg.style.height = "100%"
+  svg.style.width = "110vw"
+  // svg.style.height = "100%"
 
   // Create the triangle/diamond structure based on boardA.svg
   const elements = [
@@ -114,8 +131,8 @@ function createBoardBSVG(): SVGElement {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
   svg.setAttribute("viewBox", "0 0 300 300")
   svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-  svg.style.width = "100%"
-  svg.style.height = "100%"
+  svg.style.width = "105vw"
+  // svg.style.height = "100%"
 
   // Create group with transform
   const group = document.createElementNS("http://www.w3.org/2000/svg", "g")
@@ -236,6 +253,74 @@ function getBoardSVG(boardType: number): SVGElement {
 }
 
 /**
+ * Creates ellipses and clickable areas for game cells
+ */
+function createCellElements(
+  gameBoardSVG: SVGElement,
+  cells: GameCell[],
+  playerIds: string[]
+) {
+  // Clear existing cell images
+  cellImages.forEach((img) => img.remove())
+  cellImages = []
+
+  // Determine board type based on viewBox to choose appropriate sizing
+  const viewBox = gameBoardSVG.getAttribute("viewBox")
+  const isBoardA = viewBox?.includes("800 550") // Board A has viewBox "0 -30 800 550"
+
+  // Use board-specific sizing
+  const ellipseSize = isBoardA ? BOARD_A_ELLIPSE_SIZE : BOARD_B_ELLIPSE_SIZE
+  const cellSize = isBoardA ? BOARD_A_CELL_SIZE : BOARD_B_CELL_SIZE
+
+  // Create ellipses and images for each cell
+  cellImages = cells.map((_, index) => {
+    const ellipse = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "ellipse"
+    )
+    ellipse.setAttribute("cx", cells[index].x.toString())
+    ellipse.setAttribute("cy", cells[index].y.toString())
+    ellipse.setAttribute("rx", ellipseSize)
+    ellipse.setAttribute("ry", ellipseSize)
+    ellipse.setAttribute("style", `fill: ${FILL_COLOR} `)
+
+    // Create a svg image element which will then be used to set the image of avatar
+    const image = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "image"
+    )
+
+    image.setAttribute("x", (cells[index].x - +cellSize).toString())
+    image.setAttribute("y", (cells[index].y - +cellSize).toString())
+    image.setAttribute("width", (+cellSize * 2).toString())
+    image.setAttribute("height", (+cellSize * 2).toString())
+
+    // Add click event listener for valid players
+    if (yourPlayerId && playerIds.includes(yourPlayerId)) {
+      image.addEventListener("click", () => {
+        Rune.actions.claimCell(index)
+      })
+      image.style.cursor = "pointer"
+    }
+
+    // Check if board has a group element (Board B) or not (Board A)
+    const group = gameBoardSVG.querySelector("g")
+    if (group) {
+      // Board B has a group element
+      group.appendChild(ellipse)
+      group.appendChild(image)
+    } else {
+      // Board A has no group element
+      gameBoardSVG.appendChild(ellipse)
+      gameBoardSVG.appendChild(image)
+    }
+    return image
+  })
+
+  return cellImages
+}
+
+/**
  * Initialize board selection with SVG boards
  */
 function initializeBoardSelection() {
@@ -326,7 +411,7 @@ function updatePieceSelectionUI() {
 /**
  * Switch to game page
  */
-function switchToGamePage() {
+function switchToGamePage(cells?: GameCell[], playerIds: string[] = []) {
   configPage.classList.add("hidden")
   gamePage.classList.add("active")
 
@@ -356,6 +441,11 @@ function switchToGamePage() {
     // Clear any existing content and add the board
     gameBoard.innerHTML = ""
     gameBoard.appendChild(mainBoardSVG)
+
+    // Add cell ellipses and click handlers if cells data is available
+    if (cells && cells.length > 0) {
+      createCellElements(mainBoardSVG, cells, playerIds)
+    }
   }
 }
 
@@ -368,8 +458,7 @@ function initUI(
   gameStarted: boolean = false,
   boardType: number | null = null,
   pieceType: number | null = null,
-  playerPieceSelectionsFromServer: Record<string, number | null> = {},
-  playerBoardSelectionsFromServer: Record<string, number | null> = {}
+  playerPieceSelectionsFromServer: Record<string, number | null> = {}
 ) {
   // Save your player ID
   yourPlayerId = myPlayerId
@@ -378,7 +467,6 @@ function initUI(
   selectedBoardType = boardType
   selectedPieceType = pieceType
   playerPieceSelections = playerPieceSelectionsFromServer
-  playerBoardSelections = playerBoardSelectionsFromServer
 
   // If game started, switch to game page
   if (gameStarted) {
@@ -545,7 +633,7 @@ Rune.initClient({
       gameStarted,
       playingWithBot,
       playerPieceSelections: serverPlayerPieceSelections,
-      playerBoardSelections: serverPlayerBoardSelections,
+      cells,
     } = game
 
     // Update game mode
@@ -558,8 +646,7 @@ Rune.initClient({
       gameStarted,
       boardType,
       pieceType,
-      serverPlayerPieceSelections,
-      serverPlayerBoardSelections
+      serverPlayerPieceSelections
     )
 
     // Update selection UIs
@@ -567,9 +654,9 @@ Rune.initClient({
     updateBoardSelectionUI()
     updateStartButton()
 
-    // If game started, switch to game page
-    if (gameStarted) {
-      switchToGamePage()
+    // If game started, switch to game page with cells data
+    if (gameStarted && cells) {
+      switchToGamePage(cells, playerIds)
     }
   },
 })
