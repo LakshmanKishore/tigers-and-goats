@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" xmlns:bx="https://boxy-svg.com">
+  <!-- <defs>
+    <bx:export>
+      <bx:file format="svg" excluded="true"></bx:file>
+    </bx:export>
+  </defs> -->
+  <line style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" x1="100" y1="300" x2="700" y2="300"></line>
+  <polygon style="stroke: rgb(0, 0, 0); fill: none;" points="99.78 198.727 100 400 700 400 700 200"></polygon>
+  <path style="stroke: rgb(0, 0, 0); fill: none;" d="M 400 0 L 125 500 L 675 500 L 400 0"></path>
+  <line style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" x1="400" y1="0" x2="300" y2="500"></line>
+  <line style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" x1="400" y1="0" x2="500" y2="500"></line>
+</svg>

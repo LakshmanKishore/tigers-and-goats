@@ -21,18 +21,238 @@ const selectSound = new Audio(selectSoundAudio)
 // Game state
 let selectedBoardType: number | null = null
 let selectedPieceType: number | null = null
-let playerBoardSelections: Record<string, number | null> = {}
 let playerPieceSelections: Record<string, number | null> = {}
+let playerBoardSelections: Record<string, number | null> = {}
 let playerElements: HTMLElement[] = []
 let yourPlayerId: PlayerId | undefined
 let isPlayingWithBot: boolean = false
 
-// Board and piece images
-const boardImages = [
-  "src/assets/board-type-1.png",
-  "src/assets/board-type-2.png",
-]
+// Piece images
 const pieceImages = ["src/assets/tiger.png", "src/assets/goat.png"]
+
+// Board styling constants
+const BOARD_STROKE_COLOR = "#e6e6e6"
+const BOARD_STROKE_WIDTH = 5
+const BOARD_STROKE_WIDTH_THICK = 2
+
+/**
+ * Creates BoardA SVG (Triangle/Diamond pattern) dynamically
+ * Based on boardA.svg structure
+ */
+function createBoardASVG(): SVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+  svg.setAttribute("viewBox", "0 0 800 520")
+  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+  svg.style.width = "100%"
+  svg.style.height = "100%"
+
+  // Create the triangle/diamond structure based on boardA.svg
+  const elements = [
+    {
+      tag: "line",
+      attrs: {
+        x1: "100",
+        y1: "300",
+        x2: "700",
+        y2: "300",
+      },
+    },
+    {
+      tag: "polygon",
+      attrs: {
+        points: "100 200 100 400 700 400 700 200",
+      },
+    },
+    {
+      tag: "path",
+      attrs: {
+        d: "M 400 0 L 125 500 L 675 500 L 400 0",
+      },
+    },
+    {
+      tag: "line",
+      attrs: {
+        x1: "400",
+        y1: "0",
+        x2: "300",
+        y2: "500",
+      },
+    },
+    {
+      tag: "line",
+      attrs: {
+        x1: "400",
+        y1: "0",
+        x2: "500",
+        y2: "500",
+      },
+    },
+  ]
+
+  elements.forEach(({ tag, attrs }) => {
+    const element = document.createElementNS("http://www.w3.org/2000/svg", tag)
+    Object.entries(attrs).forEach(([key, value]) => {
+      element.setAttribute(key, value)
+    })
+
+    // Apply styling using constants
+    element.setAttribute("stroke", BOARD_STROKE_COLOR)
+    element.setAttribute("stroke-width", BOARD_STROKE_WIDTH.toString())
+    element.setAttribute("fill", "none")
+
+    svg.appendChild(element)
+  })
+
+  return svg
+}
+
+/**
+ * Creates BoardB SVG (Grid/Complex pattern) dynamically
+ * Based on boardB.svg structure
+ */
+function createBoardBSVG(): SVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+  svg.setAttribute("viewBox", "0 0 300 300")
+  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+  svg.style.width = "100%"
+  svg.style.height = "100%"
+
+  // Create group with transform
+  const group = document.createElementNS("http://www.w3.org/2000/svg", "g")
+  group.setAttribute("transform", "translate(30,30)")
+
+  // Create the grid structure based on boardB.svg
+  const elements = [
+    {
+      tag: "rect",
+      attrs: {
+        width: "240",
+        height: "240",
+      },
+    },
+    {
+      tag: "line",
+      attrs: {
+        x1: "0",
+        y1: "60",
+        x2: "240",
+        y2: "60",
+      },
+    },
+    {
+      tag: "line",
+      attrs: {
+        x1: "0",
+        y1: "120",
+        x2: "240",
+        y2: "120",
+      },
+    },
+    {
+      tag: "line",
+      attrs: {
+        x1: "0",
+        y1: "180",
+        x2: "240",
+        y2: "180",
+      },
+    },
+    {
+      tag: "line",
+      attrs: {
+        x1: "60",
+        y1: "0",
+        x2: "60",
+        y2: "240",
+      },
+    },
+    {
+      tag: "line",
+      attrs: {
+        x1: "120",
+        y1: "0",
+        x2: "120",
+        y2: "240",
+      },
+    },
+    {
+      tag: "line",
+      attrs: {
+        x1: "180",
+        y1: "0",
+        x2: "180",
+        y2: "240",
+      },
+    },
+    {
+      tag: "line",
+      attrs: {
+        x1: "240",
+        y1: "240",
+        x2: "0",
+        y2: "0",
+      },
+    },
+    {
+      tag: "line",
+      attrs: {
+        x1: "240",
+        y1: "0",
+        x2: "0",
+        y2: "240",
+      },
+    },
+    {
+      tag: "polygon",
+      attrs: {
+        points: "0 120 120 0 240 120 120 240",
+      },
+    },
+  ]
+
+  elements.forEach(({ tag, attrs }) => {
+    const element = document.createElementNS("http://www.w3.org/2000/svg", tag)
+    Object.entries(attrs).forEach(([key, value]) => {
+      element.setAttribute(key, value)
+    })
+
+    // Apply styling using constants
+    element.setAttribute("stroke", BOARD_STROKE_COLOR)
+    element.setAttribute("stroke-width", BOARD_STROKE_WIDTH_THICK.toString())
+    element.setAttribute("fill", "none")
+
+    group.appendChild(element)
+  })
+
+  svg.appendChild(group)
+  return svg
+}
+
+/**
+ * Gets the appropriate board SVG based on board type
+ */
+function getBoardSVG(boardType: number): SVGElement {
+  return boardType === 0 ? createBoardASVG() : createBoardBSVG()
+}
+
+/**
+ * Initialize board selection with SVG boards
+ */
+function initializeBoardSelection() {
+  const boardOptions = boardTypes.querySelectorAll(".board-option")
+
+  boardOptions.forEach((option, index) => {
+    // Clear existing content
+    option.innerHTML = ""
+
+    // Create SVG board
+    const svgBoard = getBoardSVG(index)
+    svgBoard.classList.add("board-image")
+
+    // Add SVG to option
+    option.appendChild(svgBoard)
+  })
+}
 
 /**
  * Updates the start button state
@@ -112,10 +332,12 @@ function switchToGamePage() {
 
   // Update game info section with selected configuration
   if (selectedBoardType !== null) {
-    boardTypeInfo.innerHTML = `
-      <img src="${boardImages[selectedBoardType]}" alt="Board Type" />
-      <span>Board ${selectedBoardType + 1}</span>
-    `
+    const boardSVG = getBoardSVG(selectedBoardType)
+    boardSVG.style.width = "50px"
+    boardSVG.style.height = "50px"
+
+    boardTypeInfo.innerHTML = `<span>Board ${selectedBoardType + 1}</span>`
+    boardTypeInfo.insertBefore(boardSVG, boardTypeInfo.firstChild)
   }
 
   if (selectedPieceType !== null) {
@@ -123,6 +345,17 @@ function switchToGamePage() {
       <img src="${pieceImages[selectedPieceType]}" alt="Piece Type" />
       <span>${selectedPieceType === 0 ? "Tiger" : "Goat"}</span>
     `
+  }
+
+  // Update the main game board with the selected board type
+  const gameBoard = document.getElementById("gameBoard")!
+  if (selectedBoardType !== null) {
+    const mainBoardSVG = getBoardSVG(selectedBoardType)
+    mainBoardSVG.classList.add("main-game-board")
+
+    // Clear any existing content and add the board
+    gameBoard.innerHTML = ""
+    gameBoard.appendChild(mainBoardSVG)
   }
 }
 
@@ -152,6 +385,9 @@ function initUI(
     switchToGamePage()
     return
   }
+
+  // Initialize board selection with SVG boards
+  initializeBoardSelection()
 
   // Setup player display
   playersSection.innerHTML = "" // Clear existing content
