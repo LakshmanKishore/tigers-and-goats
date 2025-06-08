@@ -5,9 +5,12 @@ export interface Cell {
   y: number
   playerId: PlayerId | null
   reachableCellIndexes: number[]
+  tigerJumpableIndexes: number[]
+  goatRemovalAfterTigerJumpIndexes: number[]
 }
 export interface PiecesCount {
-  goatCount: 15 | 20
+  // TODO: Remove the 3 from here
+  goatCount: 15 | 20 | 3
   tigerCount: 3 | 4
   tigerBlockedCount: number
   goatsTakenCount: number
@@ -46,77 +49,412 @@ declare global {
 
 // Board A - 23 intersection points (0-22)
 const cellsForBoardA: Cell[] = [
-  // To get the correct coordinates, use the getIntersection function commented at the bottom of this file and pass the elements from the client file.
   // Top (y=0)
-  { x: 400, y: 0, playerId: null, reachableCellIndexes: [18, 20] }, // 19
+  {
+    x: 400,
+    y: 0,
+    playerId: null,
+    reachableCellIndexes: [2, 3, 4, 5],
+    tigerJumpableIndexes: [8, 9, 10, 11],
+    goatRemovalAfterTigerJumpIndexes: [2, 3, 4, 5],
+  }, // 0
 
   // Second row (y=200)
-  { x: 100, y: 200, playerId: null, reachableCellIndexes: [4, 6] }, // 7
-  { x: 290, y: 200, playerId: null, reachableCellIndexes: [13, 15] }, // 14
-  { x: 360, y: 200, playerId: null, reachableCellIndexes: [8, 13, 15] }, // 16
-  { x: 440, y: 200, playerId: null, reachableCellIndexes: [9, 18] }, // 17
-  { x: 510, y: 200, playerId: null, reachableCellIndexes: [14, 16] }, // 15
-  { x: 700, y: 200, playerId: null, reachableCellIndexes: [12, 14, 16] }, // 13
+  {
+    x: 100,
+    y: 200,
+    playerId: null,
+    reachableCellIndexes: [2, 7],
+    tigerJumpableIndexes: [3, 13],
+    goatRemovalAfterTigerJumpIndexes: [2, 7],
+  }, // 1
+  {
+    x: 290,
+    y: 200,
+    playerId: null,
+    reachableCellIndexes: [0, 1, 3, 8],
+    tigerJumpableIndexes: [4, 14],
+    goatRemovalAfterTigerJumpIndexes: [3, 8],
+  }, // 2
+  {
+    x: 360,
+    y: 200,
+    playerId: null,
+    reachableCellIndexes: [0, 2, 4, 9],
+    tigerJumpableIndexes: [1, 5, 15],
+    goatRemovalAfterTigerJumpIndexes: [2, 4, 9],
+  }, // 3
+  {
+    x: 440,
+    y: 200,
+    playerId: null,
+    reachableCellIndexes: [0, 3, 5, 10],
+    tigerJumpableIndexes: [2, 6, 16],
+    goatRemovalAfterTigerJumpIndexes: [3, 5, 10],
+  }, // 4
+  {
+    x: 510,
+    y: 200,
+    playerId: null,
+    reachableCellIndexes: [0, 4, 6, 11],
+    tigerJumpableIndexes: [3, 17],
+    goatRemovalAfterTigerJumpIndexes: [4, 11],
+  }, // 5
+  {
+    x: 700,
+    y: 200,
+    playerId: null,
+    reachableCellIndexes: [5, 12],
+    tigerJumpableIndexes: [4, 18],
+    goatRemovalAfterTigerJumpIndexes: [5, 12],
+  }, // 6
 
   // Middle row (y=300)
-  { x: 100, y: 300, playerId: null, reachableCellIndexes: [1, 9] }, // 0
-  { x: 235, y: 300, playerId: null, reachableCellIndexes: [1, 3] }, // 2
-  { x: 340, y: 300, playerId: null, reachableCellIndexes: [9, 11] }, // 4
-  { x: 460, y: 300, playerId: null, reachableCellIndexes: [2, 4] }, // 5
-  { x: 565, y: 300, playerId: null, reachableCellIndexes: [0, 10, 17] }, // 3
-  { x: 700, y: 300, playerId: null, reachableCellIndexes: [0, 2, 4] }, // 1
+  {
+    x: 100,
+    y: 300,
+    playerId: null,
+    reachableCellIndexes: [1, 8, 13],
+    tigerJumpableIndexes: [9],
+    goatRemovalAfterTigerJumpIndexes: [8],
+  }, // 7
+  {
+    x: 235,
+    y: 300,
+    playerId: null,
+    reachableCellIndexes: [2, 7, 9, 14],
+    tigerJumpableIndexes: [0, 10, 19],
+    goatRemovalAfterTigerJumpIndexes: [2, 9, 14],
+  }, // 8
+  {
+    x: 340,
+    y: 300,
+    playerId: null,
+    reachableCellIndexes: [3, 8, 10, 15],
+    tigerJumpableIndexes: [0, 7, 11, 20],
+    goatRemovalAfterTigerJumpIndexes: [3, 8, 10, 15],
+  }, // 9
+  {
+    x: 460,
+    y: 300,
+    playerId: null,
+    reachableCellIndexes: [4, 9, 11, 16],
+    tigerJumpableIndexes: [0, 8, 12, 21],
+    goatRemovalAfterTigerJumpIndexes: [4, 9, 11, 16],
+  }, // 10
+  {
+    x: 565,
+    y: 300,
+    playerId: null,
+    reachableCellIndexes: [5, 10, 12, 17],
+    tigerJumpableIndexes: [0, 9, 22],
+    goatRemovalAfterTigerJumpIndexes: [5, 10, 17],
+  }, // 11
+  {
+    x: 700,
+    y: 300,
+    playerId: null,
+    reachableCellIndexes: [6, 11, 18],
+    tigerJumpableIndexes: [10],
+    goatRemovalAfterTigerJumpIndexes: [11],
+  }, // 12
 
   // Fourth row (y=400)
-  { x: 100, y: 400, playerId: null, reachableCellIndexes: [1, 3, 5, 11] }, // 6
-  { x: 180, y: 400, playerId: null, reachableCellIndexes: [6, 8] }, // 9
-  { x: 320, y: 400, playerId: null, reachableCellIndexes: [4, 10, 12] }, // 11
-  { x: 480, y: 400, playerId: null, reachableCellIndexes: [11, 13] }, // 12
-  { x: 620, y: 400, playerId: null, reachableCellIndexes: [7, 16] }, // 10
-  { x: 700, y: 400, playerId: null, reachableCellIndexes: [5, 7] }, // 8
+  {
+    x: 100,
+    y: 400,
+    playerId: null,
+    reachableCellIndexes: [7, 14],
+    tigerJumpableIndexes: [1, 15],
+    goatRemovalAfterTigerJumpIndexes: [7, 14],
+  }, // 13
+  {
+    x: 180,
+    y: 400,
+    playerId: null,
+    reachableCellIndexes: [8, 13, 15, 19],
+    tigerJumpableIndexes: [2, 16],
+    goatRemovalAfterTigerJumpIndexes: [8, 15],
+  }, // 14
+  {
+    x: 320,
+    y: 400,
+    playerId: null,
+    reachableCellIndexes: [9, 14, 16, 20],
+    tigerJumpableIndexes: [3, 13, 17],
+    goatRemovalAfterTigerJumpIndexes: [9, 14, 16],
+  }, // 15
+  {
+    x: 480,
+    y: 400,
+    playerId: null,
+    reachableCellIndexes: [10, 15, 17, 21],
+    tigerJumpableIndexes: [4, 14, 18],
+    goatRemovalAfterTigerJumpIndexes: [10, 15, 17],
+  }, // 16
+  {
+    x: 620,
+    y: 400,
+    playerId: null,
+    reachableCellIndexes: [11, 16, 18, 22],
+    tigerJumpableIndexes: [5, 15],
+    goatRemovalAfterTigerJumpIndexes: [11, 16],
+  }, // 17
+  {
+    x: 700,
+    y: 400,
+    playerId: null,
+    reachableCellIndexes: [12, 17],
+    tigerJumpableIndexes: [6, 16],
+    goatRemovalAfterTigerJumpIndexes: [12, 17],
+  }, // 18
 
   // Bottom row (y=500)
-  { x: 125, y: 500, playerId: null, reachableCellIndexes: [17, 19] }, // 18
-  { x: 300, y: 500, playerId: null, reachableCellIndexes: [20, 22] }, // 21
-  { x: 500, y: 500, playerId: null, reachableCellIndexes: [21] }, // 22
-  { x: 675, y: 500, playerId: null, reachableCellIndexes: [19, 21] }, // 20
+  {
+    x: 125,
+    y: 500,
+    playerId: null,
+    reachableCellIndexes: [14, 20],
+    tigerJumpableIndexes: [8, 21],
+    goatRemovalAfterTigerJumpIndexes: [14, 20],
+  }, // 19
+  {
+    x: 300,
+    y: 500,
+    playerId: null,
+    reachableCellIndexes: [15, 19, 21],
+    tigerJumpableIndexes: [9, 22],
+    goatRemovalAfterTigerJumpIndexes: [15, 21],
+  }, // 20
+  {
+    x: 500,
+    y: 500,
+    playerId: null,
+    reachableCellIndexes: [16, 20, 22],
+    tigerJumpableIndexes: [10, 19],
+    goatRemovalAfterTigerJumpIndexes: [16, 20],
+  }, // 21
+  {
+    x: 675,
+    y: 500,
+    playerId: null,
+    reachableCellIndexes: [17, 21],
+    tigerJumpableIndexes: [11, 20],
+    goatRemovalAfterTigerJumpIndexes: [17, 21],
+  }, // 22
 ]
 
 // Board B - 25 intersection points (0-24)
 const cellsForBoardB: Cell[] = [
   // Top row (5 points)
-  { x: 0, y: 0, playerId: null, reachableCellIndexes: [1, 5] },
-  { x: 60, y: 0, playerId: null, reachableCellIndexes: [0, 2, 6] },
-  { x: 120, y: 0, playerId: null, reachableCellIndexes: [1, 3, 7] },
-  { x: 180, y: 0, playerId: null, reachableCellIndexes: [2, 4, 8] },
-  { x: 240, y: 0, playerId: null, reachableCellIndexes: [3, 9] },
+  {
+    x: 0,
+    y: 0,
+    playerId: null,
+    reachableCellIndexes: [1, 5],
+    tigerJumpableIndexes: [2, 10],
+    goatRemovalAfterTigerJumpIndexes: [1, 5],
+  }, // 0
+  {
+    x: 60,
+    y: 0,
+    playerId: null,
+    reachableCellIndexes: [0, 2, 6],
+    tigerJumpableIndexes: [3, 11],
+    goatRemovalAfterTigerJumpIndexes: [2, 6],
+  }, // 1
+  {
+    x: 120,
+    y: 0,
+    playerId: null,
+    reachableCellIndexes: [1, 3, 7],
+    tigerJumpableIndexes: [0, 4, 12],
+    goatRemovalAfterTigerJumpIndexes: [1, 3, 7],
+  }, // 2
+  {
+    x: 180,
+    y: 0,
+    playerId: null,
+    reachableCellIndexes: [2, 4, 8],
+    tigerJumpableIndexes: [1, 13],
+    goatRemovalAfterTigerJumpIndexes: [2, 8],
+  }, // 3
+  {
+    x: 240,
+    y: 0,
+    playerId: null,
+    reachableCellIndexes: [3, 9],
+    tigerJumpableIndexes: [2, 14],
+    goatRemovalAfterTigerJumpIndexes: [3, 9],
+  }, // 4
 
   // Second row (5 points)
-  { x: 0, y: 60, playerId: null, reachableCellIndexes: [0, 6, 10] },
-  { x: 60, y: 60, playerId: null, reachableCellIndexes: [1, 5, 7, 11, 12] },
-  { x: 120, y: 60, playerId: null, reachableCellIndexes: [2, 6, 8, 12] },
-  { x: 180, y: 60, playerId: null, reachableCellIndexes: [3, 7, 9, 13, 14] },
-  { x: 240, y: 60, playerId: null, reachableCellIndexes: [4, 8, 14] },
+  {
+    x: 0,
+    y: 60,
+    playerId: null,
+    reachableCellIndexes: [0, 6, 10],
+    tigerJumpableIndexes: [7, 15],
+    goatRemovalAfterTigerJumpIndexes: [6, 10],
+  }, // 5
+  {
+    x: 60,
+    y: 60,
+    playerId: null,
+    reachableCellIndexes: [1, 5, 7, 11],
+    tigerJumpableIndexes: [0, 8, 16],
+    goatRemovalAfterTigerJumpIndexes: [1, 7, 11],
+  }, // 6
+  {
+    x: 120,
+    y: 60,
+    playerId: null,
+    reachableCellIndexes: [2, 6, 8, 12],
+    tigerJumpableIndexes: [1, 5, 9, 17],
+    goatRemovalAfterTigerJumpIndexes: [2, 6, 8, 12],
+  }, // 7
+  {
+    x: 180,
+    y: 60,
+    playerId: null,
+    reachableCellIndexes: [3, 7, 9, 13],
+    tigerJumpableIndexes: [2, 6, 14, 18],
+    goatRemovalAfterTigerJumpIndexes: [3, 7, 9, 13],
+  }, // 8
+  {
+    x: 240,
+    y: 60,
+    playerId: null,
+    reachableCellIndexes: [4, 8, 14],
+    tigerJumpableIndexes: [3, 19],
+    goatRemovalAfterTigerJumpIndexes: [4, 14],
+  }, // 9
 
   // Third row (5 points)
-  { x: 0, y: 120, playerId: null, reachableCellIndexes: [5, 11, 15] },
-  { x: 60, y: 120, playerId: null, reachableCellIndexes: [6, 10, 12, 16] },
-  { x: 120, y: 120, playerId: null, reachableCellIndexes: [6, 7, 11, 13, 17] },
-  { x: 180, y: 120, playerId: null, reachableCellIndexes: [8, 12, 14, 18] },
-  { x: 240, y: 120, playerId: null, reachableCellIndexes: [8, 9, 13, 19] },
+  {
+    x: 0,
+    y: 120,
+    playerId: null,
+    reachableCellIndexes: [5, 11, 15],
+    tigerJumpableIndexes: [0, 12, 20],
+    goatRemovalAfterTigerJumpIndexes: [5, 11, 15],
+  }, // 10
+  {
+    x: 60,
+    y: 120,
+    playerId: null,
+    reachableCellIndexes: [6, 10, 12, 16],
+    tigerJumpableIndexes: [1, 5, 13, 21],
+    goatRemovalAfterTigerJumpIndexes: [6, 10, 12, 16],
+  }, // 11
+  {
+    x: 120,
+    y: 120,
+    playerId: null,
+    reachableCellIndexes: [7, 11, 13, 17],
+    tigerJumpableIndexes: [2, 6, 10, 14, 22],
+    goatRemovalAfterTigerJumpIndexes: [7, 11, 13, 17],
+  }, // 12
+  {
+    x: 180,
+    y: 120,
+    playerId: null,
+    reachableCellIndexes: [8, 12, 14, 18],
+    tigerJumpableIndexes: [3, 7, 11, 19, 23],
+    goatRemovalAfterTigerJumpIndexes: [8, 12, 14, 18],
+  }, // 13
+  {
+    x: 240,
+    y: 120,
+    playerId: null,
+    reachableCellIndexes: [9, 13, 19],
+    tigerJumpableIndexes: [4, 8, 12, 24],
+    goatRemovalAfterTigerJumpIndexes: [9, 13, 19],
+  }, // 14
 
   // Fourth row (5 points)
-  { x: 0, y: 180, playerId: null, reachableCellIndexes: [10, 16, 20] },
-  { x: 60, y: 180, playerId: null, reachableCellIndexes: [11, 15, 17, 21] },
-  { x: 120, y: 180, playerId: null, reachableCellIndexes: [12, 16, 18, 22] },
-  { x: 180, y: 180, playerId: null, reachableCellIndexes: [13, 17, 19, 23] },
-  { x: 240, y: 180, playerId: null, reachableCellIndexes: [14, 18, 24] },
+  {
+    x: 0,
+    y: 180,
+    playerId: null,
+    reachableCellIndexes: [10, 16, 20],
+    tigerJumpableIndexes: [5, 17],
+    goatRemovalAfterTigerJumpIndexes: [10, 16],
+  }, // 15
+  {
+    x: 60,
+    y: 180,
+    playerId: null,
+    reachableCellIndexes: [11, 15, 17, 21],
+    tigerJumpableIndexes: [6, 10, 18, 22],
+    goatRemovalAfterTigerJumpIndexes: [11, 15, 17, 21],
+  }, // 16
+  {
+    x: 120,
+    y: 180,
+    playerId: null,
+    reachableCellIndexes: [12, 16, 18, 22],
+    tigerJumpableIndexes: [7, 11, 15, 19, 23],
+    goatRemovalAfterTigerJumpIndexes: [12, 16, 18, 22],
+  }, // 17
+  {
+    x: 180,
+    y: 180,
+    playerId: null,
+    reachableCellIndexes: [13, 17, 19, 23],
+    tigerJumpableIndexes: [8, 12, 16, 24],
+    goatRemovalAfterTigerJumpIndexes: [13, 17, 19, 23],
+  }, // 18
+  {
+    x: 240,
+    y: 180,
+    playerId: null,
+    reachableCellIndexes: [14, 18, 24],
+    tigerJumpableIndexes: [9, 13, 17],
+    goatRemovalAfterTigerJumpIndexes: [14, 18],
+  }, // 19
 
   // Bottom row (5 points)
-  { x: 0, y: 240, playerId: null, reachableCellIndexes: [15, 21] },
-  { x: 60, y: 240, playerId: null, reachableCellIndexes: [16, 20, 22] },
-  { x: 120, y: 240, playerId: null, reachableCellIndexes: [17, 21, 23] },
-  { x: 180, y: 240, playerId: null, reachableCellIndexes: [18, 22, 24] },
-  { x: 240, y: 240, playerId: null, reachableCellIndexes: [19, 23] },
+  {
+    x: 0,
+    y: 240,
+    playerId: null,
+    reachableCellIndexes: [15, 21],
+    tigerJumpableIndexes: [10, 22],
+    goatRemovalAfterTigerJumpIndexes: [15, 21],
+  }, // 20
+  {
+    x: 60,
+    y: 240,
+    playerId: null,
+    reachableCellIndexes: [16, 20, 22],
+    tigerJumpableIndexes: [11, 23],
+    goatRemovalAfterTigerJumpIndexes: [16, 22],
+  }, // 21
+  {
+    x: 120,
+    y: 240,
+    playerId: null,
+    reachableCellIndexes: [17, 21, 23],
+    tigerJumpableIndexes: [12, 16, 24],
+    goatRemovalAfterTigerJumpIndexes: [17, 21, 23],
+  }, // 22
+  {
+    x: 180,
+    y: 240,
+    playerId: null,
+    reachableCellIndexes: [18, 22, 24],
+    tigerJumpableIndexes: [13, 17, 21],
+    goatRemovalAfterTigerJumpIndexes: [18, 22],
+  }, // 23
+  {
+    x: 240,
+    y: 240,
+    playerId: null,
+    reachableCellIndexes: [19, 23],
+    tigerJumpableIndexes: [14, 18, 22],
+    goatRemovalAfterTigerJumpIndexes: [19, 23],
+  }, // 24
 ]
 
 // function findWinningCombo(cells: Cells) {
@@ -188,7 +526,18 @@ Rune.initLogic({
         game.selectedCellIndex === -1
       ) {
         // return and don't take that click
-        console.log("Tiger clicked on the empty cell")
+        console.log("Tiger clicked on the empty cell while selecting")
+        return
+      }
+
+      if (
+        game.playerPieceSelections[playerId] === 1 &&
+        game.cells[cellIndex].playerId !== playerId &&
+        game.selectedCellIndex === -1 &&
+        game.piecesCount.goatsRemainingCount === 0
+      ) {
+        // return and don't take that click
+        console.log("Goat clicked on the empty cell while selecting")
         return
       }
 
@@ -196,7 +545,8 @@ Rune.initLogic({
       if (game.playerPieceSelections[playerId] === 1) {
         if (
           game.piecesCount.goatsRemainingCount === 0 &&
-          game.cells[cellIndex].playerId === null
+          game.cells[cellIndex].playerId === null &&
+          game.selectedCellIndex === -1
         ) {
           console.log("Goat clicked on the empty cell")
           return
@@ -212,8 +562,54 @@ Rune.initLogic({
       }
 
       if (game.selectedCellIndex !== -1) {
-        // During this time the current cell should be moved to another cell
+        // Before performing the move based on the reachable Cell indexes and tiger jumpable indexes
         const selectedCell = game.cells[game.selectedCellIndex]
+
+        // Check for the tiger's move
+        if (game.playerPieceSelections[playerId] === 0) {
+          // Check if the tiger is moving in jumpable cell index
+          if (selectedCell.tigerJumpableIndexes.includes(cellIndex)) {
+            // Verify if the middle cell is occupied by a goat
+            const tigerJumpableCellIndex =
+              selectedCell.tigerJumpableIndexes.indexOf(cellIndex)
+            // Check if the tigerJumpable cell index is empty
+            if (game.cells[cellIndex].playerId !== null) {
+              console.log("Tiger clicked on the non-empty cell while jumping")
+              return
+            }
+            const goatRemovalIndex =
+              selectedCell.goatRemovalAfterTigerJumpIndexes[
+                tigerJumpableCellIndex
+              ]
+            // Check if the goat is present in the middle cell
+            if (
+              game.cells[goatRemovalIndex].playerId === playerId ||
+              game.cells[goatRemovalIndex].playerId === null
+            ) {
+              console.log("Tiger cannot jump over its own tiger or empty cell")
+              return
+            }
+            game.cells[goatRemovalIndex].playerId = null
+            game.piecesCount.goatsTakenCount += 1
+          } else if (selectedCell.reachableCellIndexes.includes(cellIndex)) {
+            // Check if the cellIndex is empty
+            if (game.cells[cellIndex].playerId !== null) {
+              console.log("Tiger clicked on the non-empty cell")
+              return
+            }
+          } else {
+            // If the tiger is moving in non reachable cell index
+            console.log("Tiger clicked on the non-reachable cell")
+            return
+          }
+        } else {
+          // Check if the goat is moving in reachable cell index
+          if (!selectedCell.reachableCellIndexes.includes(cellIndex)) {
+            console.log("Goat clicked on the non-reachable cell")
+            return
+          }
+        }
+        // During this time the current cell should be moved to another cell
         game.cells[cellIndex].playerId = selectedCell.playerId
         game.cells[game.selectedCellIndex].playerId = null
 
@@ -394,7 +790,7 @@ Rune.initLogic({
 
       game.gameStarted = true
       // Update the goats count and the tiger count
-      game.piecesCount.goatCount = game.boardType === 0 ? 15 : 20
+      game.piecesCount.goatCount = game.boardType === 0 ? 3 : 20
       game.piecesCount.tigerCount = game.boardType === 0 ? 3 : 4
       game.piecesCount.goatsRemainingCount = game.piecesCount.goatCount
 
