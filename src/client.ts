@@ -1,17 +1,11 @@
 import "./styles.css"
 
 import { Player, PlayerId } from "rune-sdk"
+import { GameState, Cell } from "./logic"
 
 import selectSoundAudio from "./assets/select.wav"
 import robotImage from "./assets/robot.png"
-
-// Types
-interface GameCell {
-  x: number
-  y: number
-  playerId: string | null
-  reachableCellIndexes: number[]
-}
+import { Board, getNextBestMove } from "./min_max"
 
 // DOM Elements
 const playersSection = document.getElementById("playersSection")!
@@ -34,6 +28,10 @@ let playerElements: HTMLElement[] = []
 let yourPlayerId: PlayerId | undefined
 let isPlayingWithBot: boolean = false
 let cellImages: SVGImageElement[] = []
+
+// Bot-related state
+let botMoveTimer: number | null = null
+let pendingBotMove: number | null = null
 
 // Piece images
 const pieceImages = ["src/assets/tiger.png", "src/assets/goat.png"]
@@ -257,7 +255,7 @@ function getBoardSVG(boardType: number): SVGElement {
  */
 function createCellElements(
   gameBoardSVG: SVGElement,
-  cells: GameCell[],
+  cells: Cell[],
   playerIds: string[]
 ) {
   // Clear existing cell images
@@ -298,7 +296,12 @@ function createCellElements(
     // Add click event listener for valid players
     if (yourPlayerId && playerIds.includes(yourPlayerId)) {
       image.addEventListener("click", () => {
-        Rune.actions.performCellAction(index)
+        const fromBot = image.getAttribute("from-bot")
+        Rune.actions.performCellAction({
+          cellIndex: index,
+          fromBot:
+            fromBot === null ? false : fromBot === "false" ? false : true,
+        })
       })
       image.style.cursor = "pointer"
     }
@@ -324,7 +327,7 @@ function updateCellImages({
   game,
 }: {
   game: {
-    cells: GameCell[]
+    cells: Cell[]
     playerIds: string[]
     selectedCellIndex: number
   }
@@ -473,7 +476,7 @@ function updatePieceSelectionUI() {
 /**
  * Switch to game page
  */
-function switchToGamePage(cells?: GameCell[], playerIds: string[] = []) {
+function switchToGamePage(cells?: Cell[], playerIds: string[] = []) {
   configPage.classList.add("hidden")
   gamePage.classList.add("active")
 
@@ -695,6 +698,126 @@ function startButtonHandler() {
   }
 }
 
+/**
+ * Convert game state to Board object for min-max algorithm
+ */
+function convertGameStateToBoard(gameState: GameState): Board {
+  const board = new Board()
+
+  // Determine which player ID is the bot
+  const botPlayerId = "bot"
+  const humanPlayerId = gameState.playerIds.find((id) => id !== botPlayerId)
+
+  // Get piece assignments (0 = Tiger, 1 = Goat)
+  const botPieceType = gameState.playerPieceSelections[botPlayerId] || 0
+  const humanPieceType =
+    gameState.playerPieceSelections[humanPlayerId || ""] || 1
+
+  // Set board state based on cells
+  for (let i = 0; i < gameState.cells.length; i++) {
+    const cell = gameState.cells[i]
+    if (cell.playerId === botPlayerId) {
+      // Bot piece: 1 = Goat, 2 = Tiger in Board class
+      board.board[i] = botPieceType === 0 ? 2 : 1
+    } else if (cell.playerId && cell.playerId !== botPlayerId) {
+      // Human piece: 1 = Goat, 2 = Tiger in Board class
+      board.board[i] = humanPieceType === 0 ? 2 : 1
+    } else {
+      board.board[i] = 0 // Empty
+    }
+  }
+
+  // Determine current player based on whose turn it is
+  // If lastMovePlayerId is bot, then it's human's turn (and vice versa)
+  // But we need to map this to the Board class player system (1 = Goat, 2 = Tiger)
+  const isBotTurn = gameState.lastMovePlayerId !== botPlayerId
+
+  if (isBotTurn) {
+    // It's bot's turn - set current player to bot's piece type
+    board.currentPlayer = botPieceType === 0 ? 2 : 1 // 2 = Tiger, 1 = Goat
+  } else {
+    // It's human's turn - set current player to human's piece type
+    board.currentPlayer = humanPieceType === 0 ? 2 : 1 // 2 = Tiger, 1 = Goat
+  }
+
+  // Set counts based on game state
+  board.goatsPlacedCount =
+    gameState.piecesCount.goatCount - gameState.piecesCount.goatsRemainingCount
+  board.goatsCapturedCount = gameState.piecesCount.goatsTakenCount
+  board.selectedIndexToMove = gameState.selectedCellIndex
+
+  // Determine next action based on game phase
+  // selectToPlace is only for goat and during the placement phase
+  if (
+    board.goatsPlacedCount < board.totalGoatsToPlace &&
+    board.currentPlayer === 1
+  ) {
+    board.nextAction = "selectToPlace"
+  } else if (board.selectedIndexToMove === -1) {
+    board.nextAction = "selectToMove"
+  } else {
+    board.nextAction = "selectDestination"
+  }
+
+  // Update possible movable pieces
+  board.updatePossibleMovablePieces()
+
+  return board
+}
+
+/**
+ * Make the bot's move using the min-max algorithm
+ */
+function makeBotMove(game: GameState) {
+  // Don't calculate moves from inside onChange - schedule for after current execution
+  if (pendingBotMove !== null) return
+
+  // Store the current game state for processing outside of onChange
+  const currentGameState = JSON.parse(JSON.stringify(game))
+
+  // Schedule the bot move outside of the current onChange execution
+  pendingBotMove = window.setTimeout(() => {
+    try {
+      console.log("Bot is thinking about its move...")
+      console.log("Game state for bot:", {
+        lastMovePlayerId: currentGameState.lastMovePlayerId,
+        playerPieceSelections: currentGameState.playerPieceSelections,
+        playerIds: currentGameState.playerIds,
+        botTurn: currentGameState.botTurn,
+      })
+
+      // Convert the game state to a Board object for the min-max algorithm
+      const gameBoard = convertGameStateToBoard(currentGameState)
+      console.log("Game board state prepared for bot:")
+      console.log("Board current player:", gameBoard.currentPlayer)
+      console.log("Board next action:", gameBoard.nextAction)
+
+      // Get the best move using the min-max algorithm
+      const bestMoveResult = getNextBestMove(gameBoard)
+      const bestMove = bestMoveResult.action
+
+      // Make the bot's move
+      if (bestMove !== undefined && bestMove >= 0) {
+        console.log("Bot is making move to position:", bestMove)
+
+        Rune.actions.performCellAction({ cellIndex: bestMove, fromBot: true })
+        console.log(
+          "Move performed by bot to cell index:",
+          bestMove,
+          game.selectedCellIndex
+        )
+      } else {
+        console.error("Bot failed to find a valid move")
+      }
+    } catch (error) {
+      console.error("Error in bot move calculation:", error)
+    } finally {
+      // Clear pending state
+      pendingBotMove = null
+    }
+  }, 50) // Short delay to ensure we're outside the onChange execution
+}
+
 // Initialize the Rune client
 Rune.initClient({
   onChange: ({ game, yourPlayerId }) => {
@@ -733,5 +856,56 @@ Rune.initClient({
     }
 
     updateCellImages({ game })
+
+    // Handle bot's moves on the client side
+    if (
+      game.gameStarted &&
+      game.playingWithBot &&
+      game.lastMovePlayerId !== "bot" &&
+      game.botTurn
+    ) {
+      console.log("Bot should move - Game state:", {
+        playingWithBot: game.playingWithBot,
+        lastMovePlayerId: game.lastMovePlayerId,
+        botTurn: game.botTurn,
+        selectedCellIndex: game.selectedCellIndex,
+        goatsRemaining: game.piecesCount.goatsRemainingCount,
+      })
+
+      // Clear any existing bot move timer
+      if (botMoveTimer) {
+        clearTimeout(botMoveTimer)
+        botMoveTimer = null
+      }
+
+      // Determine if we're in placement phase or movement phase
+      // const isPlacementPhase = game.piecesCount.goatsRemainingCount > 0
+      // const isSelectionPhase =
+      //   !isPlacementPhase && game.selectedCellIndex === -1
+      // const isDestinationPhase =
+      //   !isPlacementPhase && game.selectedCellIndex !== -1
+
+      // Two-phase move: select piece then move it
+      botMoveTimer = window.setTimeout(() => {
+        console.log("Bot making two-phase move: Phase 1 - Select piece")
+        makeBotMove(game)
+        console.log("game selected cell index:", game.selectedCellIndex)
+        // // Schedule phase 2 after a short delay
+        // if (game.selectedCellIndex !== -1) {
+        //   setTimeout(() => {
+        //     console.log("Bot making two-phase move: Phase 2 - Move piece")
+        //     makeBotMove(game)
+        //     console.log("game selected cell index:", game.selectedCellIndex)
+        //   }, 500)
+        // }
+      }, 1000)
+    } else {
+      console.log("Bot won't move due to conditions:", {
+        gameStarted: game.gameStarted,
+        playingWithBot: game.playingWithBot,
+        lastMovePlayerId: game.lastMovePlayerId,
+        botTurn: game.botTurn,
+      })
+    }
   },
 })

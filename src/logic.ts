@@ -30,14 +30,14 @@ export interface GameState {
   playerPieceSelections: Record<PlayerId, number | null>
   gameStarted: boolean
   playingWithBot?: boolean
-  botTurn?: boolean
-  botTurnAt?: number
+  botTurn: boolean
+  botTurnAt: number
   selectedCellIndex: number
   piecesCount: PiecesCount
 }
 
 type GameActions = {
-  performCellAction: (cellIndex: number) => void
+  performCellAction: (params: { cellIndex: number; fromBot: boolean }) => void
   updateBoardSelection: (boardType: number | null) => void
   updatePieceSelection: (pieceType: number | null) => void
   startGame: (options: { boardType: number; pieceType: number }) => void
@@ -504,19 +504,45 @@ Rune.initLogic({
     },
   }),
   actions: {
-    performCellAction: (cellIndex, { game, playerId /*, allPlayerIds*/ }) => {
+    performCellAction: (
+      params: { cellIndex: number; fromBot: boolean },
+      { game, playerId /*, allPlayerIds*/ }
+    ) => {
+      // TODO: Have to implement the draw condition here
       // if (
       //   game.cells[cellIndex]?.playerId !== null ||
       //   playerId === game.lastMovePlayerId
       // ) {
       //   throw Rune.invalidAction()
       // }
+      const cellIndex = params.cellIndex
+      const fromBot = params.fromBot
+      const singlePlayerId = playerId
+
+      playerId = fromBot ? "bot" : playerId
+
+      // if (
+      //   game.lastMovePlayerId === playerId ||
+      //   !game.playerIds.includes(playerId)
+      // ) {
+      //   return
+      // }
+
+      // Update the player id to bot if it's bot's turn
+      // if (game.playingWithBot && game.botTurn) {
+      //   playerId = "bot"
+      // }
 
       // Check if the click is coming from the lastMovePlayerId
       if (game.lastMovePlayerId && game.lastMovePlayerId === playerId) {
-        // Don't take the click if it's not the player's turn
-        console.log("It's not your turn.")
-        return
+        // Allow if it's bots turn
+        if (game.playingWithBot && game.botTurn) {
+          // Allow the bot to perform the action
+        } else {
+          // Don't take the click if it's not the player's turn
+          console.log("It's not your turn.")
+          return
+        }
       }
 
       // Whenever it's tigers turn, then the player should only click on the existing cell and not on the empty cell.
@@ -645,7 +671,7 @@ Rune.initLogic({
       // }
       if (game.playerPieceSelections[playerId] === 0) {
         if (game.selectedCellIndex === -1) {
-          game.lastMovePlayerId = playerId
+          game.lastMovePlayerId = fromBot ? playerId : singlePlayerId
         }
       } else if (game.playerPieceSelections[playerId] === 1) {
         if (
@@ -653,10 +679,10 @@ Rune.initLogic({
           game.selectedCellIndex === -1
         ) {
           // If the goats are placed and it's the goat's turn then update the last move player id
-          game.lastMovePlayerId = playerId
+          game.lastMovePlayerId = fromBot ? playerId : singlePlayerId
         } else if (game.piecesCount.goatsRemainingCount > 0) {
           // If the goats are not placed then update the last move player id
-          game.lastMovePlayerId = playerId
+          game.lastMovePlayerId = fromBot ? playerId : singlePlayerId
         }
       }
 
@@ -682,6 +708,15 @@ Rune.initLogic({
       //     },
       //   })
       // }
+      if (game.lastMovePlayerId === "bot" && game.selectedCellIndex !== -1) {
+        return
+      }
+
+      if (!game.playingWithBot) return
+
+      // Set the bot turn to true
+      game.botTurn = true
+      game.botTurnAt = Rune.gameTime() + 1000
     },
     updateBoardSelection: (boardType, { game, playerId }) => {
       // Both players can select board, but only one board type for the entire game
@@ -771,9 +806,13 @@ Rune.initLogic({
           game.playerPieceSelections["bot"] === null
         ) {
           // Set the opposite piece type for the bot
-          const otherPlayerSelection =
-            game.playerPieceSelections[playerId] || null
+          const otherPlayerSelection = game.playerPieceSelections[playerId]
           game.playerPieceSelections["bot"] = otherPlayerSelection === 0 ? 1 : 0
+        }
+        // And change the bot turn to true if the player has selected tiger to play
+        if (game.playerPieceSelections["bot"] === 1) {
+          game.botTurn = true
+          game.botTurnAt = Rune.gameTime() + 1500
         }
       }
 
@@ -865,8 +904,8 @@ Rune.initLogic({
 
         // Set bot turn flags
         if (game.lastMovePlayerId !== playerId) {
-          game.botTurnAt = Rune.gameTime() + 1500
           game.botTurn = true
+          game.botTurnAt = Rune.gameTime() + 1500
         }
 
         // If it was the leaving player's turn, make it the bot's turn
