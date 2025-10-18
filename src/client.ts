@@ -53,7 +53,7 @@ const FILL_COLOR = "#ff6b35" // Orange color for clickable indication
 
 // Board-specific sizing constants
 const BOARD_A_ELLIPSE_SIZE = "8" // Smaller for Board A's larger coordinate system
-const BOARD_A_CELL_SIZE = "55"
+const BOARD_A_CELL_SIZE = "30"
 const BOARD_B_ELLIPSE_SIZE = "5" // Larger for Board B's smaller coordinate system
 const BOARD_B_CELL_SIZE = "15"
 
@@ -66,6 +66,7 @@ function createBoardASVG(): SVGElement {
   svg.setAttribute("viewBox", "0 -50 800 600")
   svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
   svg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
+  svg.setAttribute("type", "boardA")
   svg.style.width = "110vw"
   // svg.style.height = "100%"
 
@@ -138,6 +139,7 @@ function createBoardBSVG(): SVGElement {
   svg.setAttribute("viewBox", "0 0 300 300")
   svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
   svg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
+  svg.setAttribute("type", "boardB")
   svg.style.width = "105vw"
   // svg.style.height = "100%"
 
@@ -272,8 +274,7 @@ function createCellElements(
   cellImages = []
 
   // Determine board type based on viewBox to choose appropriate sizing
-  const viewBox = gameBoardSVG.getAttribute("viewBox")
-  const isBoardA = viewBox?.includes("800 550") // Board A has viewBox "0 -30 800 550"
+  const isBoardA = gameBoardSVG.getAttribute("type") === "boardA"
 
   // Use board-specific sizing
   const ellipseSize = isBoardA ? BOARD_A_ELLIPSE_SIZE : BOARD_B_ELLIPSE_SIZE
@@ -306,6 +307,7 @@ function createCellElements(
     avatarImage.setAttribute("y", (cells[index].y - +cellSize).toString())
     avatarImage.setAttribute("width", (+cellSize * 2).toString())
     avatarImage.setAttribute("height", (+cellSize * 2).toString())
+    console.log("cell size:", cellSize)
 
     // Add click event listener for valid players
     if (yourPlayerId && playerIds.includes(yourPlayerId)) {
@@ -528,36 +530,68 @@ function updatePieceSelectionUI() {
 }
 
 /**
+ * Update game stats in the game info section
+ */
+function updateGameStats(game: GameState) {
+  const { lastMovePlayerId, playerIds, piecesCount } = game
+
+  // Determine whose turn it is
+  let currentPlayerName = ""
+  let currentPlayerAvatar = ""
+  let currentPlayerId = ""
+
+  if (lastMovePlayerId === null) {
+    // Game just started, first player's turn
+    currentPlayerId = playerIds[0]
+  } else {
+    // Next player's turn
+    const currentIndex = playerIds.indexOf(lastMovePlayerId)
+    const nextIndex = (currentIndex + 1) % playerIds.length
+    currentPlayerId = playerIds[nextIndex]
+  }
+
+  // Get player name and avatar
+  if (currentPlayerId === "bot") {
+    currentPlayerName = "AI Bot"
+    currentPlayerAvatar = robotImage
+  } else {
+    const playerInfo = Rune.getPlayerInfo(currentPlayerId)
+    currentPlayerName = playerInfo?.displayName || "Unknown Player"
+    currentPlayerAvatar = playerInfo?.avatarUrl || robotImage
+  }
+
+  // Update boardTypeInfo with turn indicator (including avatar)
+  boardTypeInfo.innerHTML = `
+    <div class="turn-indicator">
+      <div>Turn</div>
+      <img src="${currentPlayerAvatar}" alt="Player Avatar" class="turn-avatar" />
+      <span>${currentPlayerName}</span>
+    </div>
+  `
+
+  // Update pieceTypeInfo with game stats
+  pieceTypeInfo.innerHTML = `
+    <div class="game-stats">
+      <div class="stats-numbers">
+        <span>${piecesCount.goatsTakenCount}/${piecesCount.goatCount - piecesCount.goatsRemainingCount}/${piecesCount.goatCount}</span>
+        <span id="divider"></span>
+        <span>${piecesCount.tigerBlockedCount}/${piecesCount.tigerCount}</span>
+      </div>
+      <div class="stats-labels">
+        <span>Goats</span>
+        <span id="divider"></span>
+        <span>Tigers</span>
+      </div>
+    </div>
+  `
+}
+
+/**
  * Switch to game page
  */
 function switchToGamePage(cells?: Cell[], playerIds: string[] = []) {
   configPage.classList.add("hidden")
   gamePage.classList.add("active")
-
-  // Update game info section with selected configuration
-  if (selectedBoardType !== null) {
-    const boardSVG = getBoardSVG(selectedBoardType)
-    boardSVG.style.width = "50px"
-    boardSVG.style.height = "50px"
-
-    boardTypeInfo.innerHTML = `<span>Board ${selectedBoardType + 1}</span>`
-    boardTypeInfo.insertBefore(boardSVG, boardTypeInfo.firstChild)
-  }
-
-  if (selectedPieceType !== null) {
-    // Determine avatar for the current player (fallback to robot image)
-    const currentPlayerAvatar = yourPlayerId
-      ? Rune.getPlayerInfo(yourPlayerId)?.avatarUrl || robotImage
-      : robotImage
-    const maskSrc = pieceMasks[selectedPieceType]
-    pieceTypeInfo.innerHTML = `
-      <div class="piece-preview">
-        <img class="piece-mask" src="${maskSrc}" alt="Mask" />
-        <img class="piece-avatar" src="${currentPlayerAvatar}" alt="Avatar" />
-      </div>
-      <span>${selectedPieceType === 0 ? "Tiger" : "Goat"}</span>
-    `
-  }
 
   // Update the main game board with the selected board type
   const gameBoard = document.getElementById("gameBoard")!
@@ -915,6 +949,7 @@ Rune.initClient({
     // If game started, switch to game page with cells data
     if (gameStarted && cells) {
       switchToGamePage(cells, playerIds)
+      updateGameStats(game)
     }
 
     updateCellImages({ game })

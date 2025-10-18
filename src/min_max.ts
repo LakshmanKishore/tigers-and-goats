@@ -1117,19 +1117,19 @@ function getNextBestMove(gameBoard: Board): MinMaxResult {
       movesPerformed: [],
     }
   }
-
   // Choose the best move based on player (max for tiger, min for goat)
+  // If multiple moves have the same value, pick randomly among them
   let bestMove: MinMaxResult
   if (gameBoard.currentPlayer === 2) {
-    // Tiger
-    bestMove = minMaxValues.reduce((best, current) =>
-      current.value > best.value ? current : best
-    )
+    // Tiger: maximize
+    const maxValue = Math.max(...minMaxValues.map((m) => m.value))
+    const bestMoves = minMaxValues.filter((m) => m.value === maxValue)
+    bestMove = bestMoves[Math.floor(Math.random() * bestMoves.length)]
   } else {
-    // Goat
-    bestMove = minMaxValues.reduce((best, current) =>
-      current.value < best.value ? current : best
-    )
+    // Goat: minimize
+    const minValue = Math.min(...minMaxValues.map((m) => m.value))
+    const bestMoves = minMaxValues.filter((m) => m.value === minValue)
+    bestMove = bestMoves[Math.floor(Math.random() * bestMoves.length)]
   }
 
   console.log(

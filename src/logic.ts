@@ -686,6 +686,49 @@ Rune.initLogic({
         }
       }
 
+      // Update tigerBlockedCount
+      const tigerPlayerId = Object.keys(game.playerPieceSelections).find(
+        (id) => game.playerPieceSelections[id] === 0
+      )
+      if (tigerPlayerId) {
+        let blockedTigers = 0
+        game.cells.forEach((cell) => {
+          if (cell.playerId === tigerPlayerId) {
+            // Check if this tiger can move
+            let canMove = false
+
+            // Check reachable cells
+            for (const reachableIndex of cell.reachableCellIndexes) {
+              if (game.cells[reachableIndex].playerId === null) {
+                canMove = true
+                break
+              }
+            }
+
+            // If not, check jumpable cells
+            if (!canMove) {
+              for (let i = 0; i < cell.tigerJumpableIndexes.length; i++) {
+                const jumpIndex = cell.tigerJumpableIndexes[i]
+                const removalIndex = cell.goatRemovalAfterTigerJumpIndexes[i]
+                if (
+                  game.cells[jumpIndex].playerId === null &&
+                  game.cells[removalIndex].playerId !== null &&
+                  game.cells[removalIndex].playerId !== tigerPlayerId
+                ) {
+                  canMove = true
+                  break
+                }
+              }
+            }
+
+            if (!canMove) {
+              blockedTigers++
+            }
+          }
+        })
+        game.piecesCount.tigerBlockedCount = blockedTigers
+      }
+
       // if (game.winCombo) {
       //   const [player1, player2] = allPlayerIds
 
