@@ -484,7 +484,8 @@ Rune.initLogic({
     cells: [...cellsForBoardA], // Default to board A, will be updated when game starts
     winCombo: null,
     lastMovePlayerId: null,
-    playerIds: allPlayerIds,
+    playerIds:
+      allPlayerIds.length === 1 ? [...allPlayerIds, "bot"] : allPlayerIds,
     boardType: null,
     pieceType: null,
     playerBoardSelections: {},
@@ -708,6 +709,17 @@ Rune.initLogic({
         } else if (game.piecesCount.goatsRemainingCount > 0) {
           // If the goats are not placed then update the last move player id
           game.lastMovePlayerId = fromBot ? playerId : singlePlayerId
+        }
+      }
+
+      // Toggle botTurn for single-player
+      if (game.playingWithBot && game.lastMovePlayerId) {
+        const currentIndex = game.playerIds.indexOf(game.lastMovePlayerId)
+        const nextIndex = (currentIndex + 1) % game.playerIds.length
+        const nextPlayerId = game.playerIds[nextIndex]
+        game.botTurn = nextPlayerId === "bot"
+        if (game.botTurn) {
+          game.botTurnAt = Rune.gameTime() + 1500
         }
       }
 

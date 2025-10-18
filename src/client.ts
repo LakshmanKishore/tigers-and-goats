@@ -828,6 +828,18 @@ function startButtonHandler() {
 function convertGameStateToBoard(gameState: GameState): Board {
   const board = new Board()
 
+  // Set board size and connectivity based on board type
+  board.board = new Array(gameState.cells.length).fill(0)
+  board.reachableCellIndexes = gameState.cells.map(
+    (cell) => cell.reachableCellIndexes
+  )
+  board.tigerJumpableIndexes = gameState.cells.map(
+    (cell) => cell.tigerJumpableIndexes
+  )
+  board.goatRemovalAfterTigerJumpIndexes = gameState.cells.map(
+    (cell) => cell.goatRemovalAfterTigerJumpIndexes
+  )
+
   // Determine which player ID is the bot
   const botPlayerId = "bot"
   const humanPlayerId = gameState.playerIds.find((id) => id !== botPlayerId)
@@ -917,9 +929,29 @@ function makeBotMove(game: GameState) {
       console.log("Board current player:", gameBoard.currentPlayer)
       console.log("Board next action:", gameBoard.nextAction)
 
-      // Get the best move using the min-max algorithm
-      const bestMoveResult = getNextBestMove(gameBoard)
-      const bestMove = bestMoveResult.action
+      let bestMove: number
+
+      if (currentGameState.boardType === 1) {
+        // Board B: use random move instead of min-max
+        let possibleMoves: number[] = []
+        if (gameBoard.nextAction === "selectToPlace") {
+          possibleMoves = gameBoard.getAllEmptyLocations()
+        } else if (gameBoard.nextAction === "selectToMove") {
+          possibleMoves = gameBoard.possibleMovablePieces
+        } else if (gameBoard.nextAction === "selectDestination") {
+          possibleMoves = gameBoard.possibleMovableDestinations
+        }
+        if (possibleMoves.length > 0) {
+          const randomIndex = Math.floor(Math.random() * possibleMoves.length)
+          bestMove = possibleMoves[randomIndex]
+        } else {
+          bestMove = -1
+        }
+      } else {
+        // Board A: use min-max
+        const bestMoveResult = getNextBestMove(gameBoard)
+        bestMove = bestMoveResult.action
+      }
 
       // Make the bot's move
       if (bestMove !== undefined && bestMove >= 0) {
