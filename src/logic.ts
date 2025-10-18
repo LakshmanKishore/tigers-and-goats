@@ -9,8 +9,7 @@ export interface Cell {
   goatRemovalAfterTigerJumpIndexes: number[]
 }
 export interface PiecesCount {
-  // TODO: Remove the 3 from here
-  goatCount: 15 | 20 | 3
+  goatCount: 15 | 20
   tigerCount: 3 | 4
   tigerBlockedCount: number
   goatsTakenCount: number
@@ -928,7 +927,7 @@ Rune.initLogic({
 
       game.gameStarted = true
       // Update the goats count and the tiger count
-      game.piecesCount.goatCount = game.boardType === 0 ? 3 : 20
+      game.piecesCount.goatCount = game.boardType === 0 ? 15 : 20
       game.piecesCount.tigerCount = game.boardType === 0 ? 3 : 4
       game.piecesCount.goatsRemainingCount = game.piecesCount.goatCount
 
