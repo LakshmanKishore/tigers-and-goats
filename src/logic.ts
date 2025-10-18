@@ -252,9 +252,9 @@ const cellsForBoardB: Cell[] = [
     x: 0,
     y: 0,
     playerId: null,
-    reachableCellIndexes: [1, 5],
-    tigerJumpableIndexes: [2, 10],
-    goatRemovalAfterTigerJumpIndexes: [1, 5],
+    reachableCellIndexes: [1, 5, 6],
+    tigerJumpableIndexes: [2, 10, 12],
+    goatRemovalAfterTigerJumpIndexes: [1, 5, 6],
   }, // 0
   {
     x: 60,
@@ -302,33 +302,33 @@ const cellsForBoardB: Cell[] = [
     x: 60,
     y: 60,
     playerId: null,
-    reachableCellIndexes: [1, 5, 7, 11],
-    tigerJumpableIndexes: [0, 8, 16],
-    goatRemovalAfterTigerJumpIndexes: [1, 7, 11],
+    reachableCellIndexes: [0, 1, 2, 5, 7, 10, 11, 12],
+    tigerJumpableIndexes: [8, 16, 18],
+    goatRemovalAfterTigerJumpIndexes: [7, 11, 12],
   }, // 6
   {
     x: 120,
     y: 60,
     playerId: null,
     reachableCellIndexes: [2, 6, 8, 12],
-    tigerJumpableIndexes: [1, 5, 9, 17],
-    goatRemovalAfterTigerJumpIndexes: [2, 6, 8, 12],
+    tigerJumpableIndexes: [5, 9, 17],
+    goatRemovalAfterTigerJumpIndexes: [6, 8, 12],
   }, // 7
   {
     x: 180,
     y: 60,
     playerId: null,
-    reachableCellIndexes: [3, 7, 9, 13],
-    tigerJumpableIndexes: [2, 6, 14, 18],
-    goatRemovalAfterTigerJumpIndexes: [3, 7, 9, 13],
+    reachableCellIndexes: [2, 3, 4, 7, 9, 12, 13, 14],
+    tigerJumpableIndexes: [6, 18],
+    goatRemovalAfterTigerJumpIndexes: [7, 13],
   }, // 8
   {
     x: 240,
     y: 60,
     playerId: null,
     reachableCellIndexes: [4, 8, 14],
-    tigerJumpableIndexes: [3, 19],
-    goatRemovalAfterTigerJumpIndexes: [4, 14],
+    tigerJumpableIndexes: [7, 19],
+    goatRemovalAfterTigerJumpIndexes: [8, 14],
   }, // 9
 
   // Third row (5 points)
@@ -336,41 +336,41 @@ const cellsForBoardB: Cell[] = [
     x: 0,
     y: 120,
     playerId: null,
-    reachableCellIndexes: [5, 11, 15],
-    tigerJumpableIndexes: [0, 12, 20],
-    goatRemovalAfterTigerJumpIndexes: [5, 11, 15],
+    reachableCellIndexes: [5, 6, 11, 15, 16],
+    tigerJumpableIndexes: [0, 2, 12, 20, 22],
+    goatRemovalAfterTigerJumpIndexes: [5, 6, 11, 15, 16],
   }, // 10
   {
     x: 60,
     y: 120,
     playerId: null,
     reachableCellIndexes: [6, 10, 12, 16],
-    tigerJumpableIndexes: [1, 5, 13, 21],
-    goatRemovalAfterTigerJumpIndexes: [6, 10, 12, 16],
+    tigerJumpableIndexes: [1, 13, 21],
+    goatRemovalAfterTigerJumpIndexes: [6, 12, 16],
   }, // 11
   {
     x: 120,
     y: 120,
     playerId: null,
-    reachableCellIndexes: [7, 11, 13, 17],
-    tigerJumpableIndexes: [2, 6, 10, 14, 22],
-    goatRemovalAfterTigerJumpIndexes: [7, 11, 13, 17],
+    reachableCellIndexes: [6, 7, 8, 11, 13, 16, 17, 18],
+    tigerJumpableIndexes: [0, 2, 4, 10, 14, 20, 22, 24],
+    goatRemovalAfterTigerJumpIndexes: [6, 7, 8, 11, 13, 16, 17, 18],
   }, // 12
   {
     x: 180,
     y: 120,
     playerId: null,
     reachableCellIndexes: [8, 12, 14, 18],
-    tigerJumpableIndexes: [3, 7, 11, 19, 23],
-    goatRemovalAfterTigerJumpIndexes: [8, 12, 14, 18],
+    tigerJumpableIndexes: [3, 11, 23],
+    goatRemovalAfterTigerJumpIndexes: [8, 12, 18],
   }, // 13
   {
     x: 240,
     y: 120,
     playerId: null,
-    reachableCellIndexes: [9, 13, 19],
-    tigerJumpableIndexes: [4, 8, 12, 24],
-    goatRemovalAfterTigerJumpIndexes: [9, 13, 19],
+    reachableCellIndexes: [8, 9, 13, 18, 19],
+    tigerJumpableIndexes: [2, 4, 12, 22, 24],
+    goatRemovalAfterTigerJumpIndexes: [8, 9, 13, 18, 19],
   }, // 14
 
   // Fourth row (5 points)
@@ -386,32 +386,32 @@ const cellsForBoardB: Cell[] = [
     x: 60,
     y: 180,
     playerId: null,
-    reachableCellIndexes: [11, 15, 17, 21],
-    tigerJumpableIndexes: [6, 10, 18, 22],
-    goatRemovalAfterTigerJumpIndexes: [11, 15, 17, 21],
+    reachableCellIndexes: [10, 11, 12, 15, 17, 20, 21, 22],
+    tigerJumpableIndexes: [6, 8, 18],
+    goatRemovalAfterTigerJumpIndexes: [11, 12, 17],
   }, // 16
   {
     x: 120,
     y: 180,
     playerId: null,
     reachableCellIndexes: [12, 16, 18, 22],
-    tigerJumpableIndexes: [7, 11, 15, 19, 23],
-    goatRemovalAfterTigerJumpIndexes: [12, 16, 18, 22],
+    tigerJumpableIndexes: [7, 15, 19],
+    goatRemovalAfterTigerJumpIndexes: [12, 16, 18],
   }, // 17
   {
     x: 180,
     y: 180,
     playerId: null,
-    reachableCellIndexes: [13, 17, 19, 23],
-    tigerJumpableIndexes: [8, 12, 16, 24],
-    goatRemovalAfterTigerJumpIndexes: [13, 17, 19, 23],
+    reachableCellIndexes: [12, 13, 14, 17, 19, 22, 23, 24],
+    tigerJumpableIndexes: [6, 8, 16],
+    goatRemovalAfterTigerJumpIndexes: [12, 13, 17],
   }, // 18
   {
     x: 240,
     y: 180,
     playerId: null,
     reachableCellIndexes: [14, 18, 24],
-    tigerJumpableIndexes: [9, 13, 17],
+    tigerJumpableIndexes: [9, 17],
     goatRemovalAfterTigerJumpIndexes: [14, 18],
   }, // 19
 
@@ -420,9 +420,9 @@ const cellsForBoardB: Cell[] = [
     x: 0,
     y: 240,
     playerId: null,
-    reachableCellIndexes: [15, 21],
-    tigerJumpableIndexes: [10, 22],
-    goatRemovalAfterTigerJumpIndexes: [15, 21],
+    reachableCellIndexes: [15, 16, 21],
+    tigerJumpableIndexes: [10, 12, 22],
+    goatRemovalAfterTigerJumpIndexes: [15, 16, 21],
   }, // 20
   {
     x: 60,
@@ -436,25 +436,25 @@ const cellsForBoardB: Cell[] = [
     x: 120,
     y: 240,
     playerId: null,
-    reachableCellIndexes: [17, 21, 23],
-    tigerJumpableIndexes: [12, 16, 24],
-    goatRemovalAfterTigerJumpIndexes: [17, 21, 23],
+    reachableCellIndexes: [16, 17, 18, 21, 23],
+    tigerJumpableIndexes: [10, 12, 14],
+    goatRemovalAfterTigerJumpIndexes: [16, 17, 18],
   }, // 22
   {
     x: 180,
     y: 240,
     playerId: null,
     reachableCellIndexes: [18, 22, 24],
-    tigerJumpableIndexes: [13, 17, 21],
+    tigerJumpableIndexes: [13, 21],
     goatRemovalAfterTigerJumpIndexes: [18, 22],
   }, // 23
   {
     x: 240,
     y: 240,
     playerId: null,
-    reachableCellIndexes: [19, 23],
-    tigerJumpableIndexes: [14, 18, 22],
-    goatRemovalAfterTigerJumpIndexes: [19, 23],
+    reachableCellIndexes: [18, 19, 23],
+    tigerJumpableIndexes: [12, 14, 22],
+    goatRemovalAfterTigerJumpIndexes: [18, 19, 23],
   }, // 24
 ]
 
@@ -510,16 +510,17 @@ Rune.initLogic({
       params: { cellIndex: number; fromBot: boolean },
       { game, playerId /*, allPlayerIds*/ }
     ) => {
-      // TODO: Have to implement the draw condition here
-      // if (
-      //   game.cells[cellIndex]?.playerId !== null ||
-      //   playerId === game.lastMovePlayerId
-      // ) {
-      //   throw Rune.invalidAction()
-      // }
       const cellIndex = params.cellIndex
       const fromBot = params.fromBot
       const singlePlayerId = playerId
+
+      // If this action is coming from the bot but the bot has been replaced
+      // (for example a human joined and took the bot slot), ignore the
+      // stale bot action. This prevents old/queued bot moves from applying
+      // after a replacement and creating invalid piece counts.
+      if (fromBot && !game.playerIds.includes("bot")) {
+        return
+      }
 
       playerId = fromBot ? "bot" : playerId
 
@@ -600,6 +601,17 @@ Rune.initLogic({
         game.selectedCellIndex = cellIndex
         console.log(
           "Tiger player selected another tiger, updating the selectedCellIndex"
+        )
+      } else if (
+        game.selectedCellIndex !== -1 &&
+        game.playerPieceSelections[playerId] === 1 &&
+        cellIndex !== game.selectedCellIndex &&
+        game.cells[cellIndex].playerId === playerId
+      ) {
+        // If all the goats have been placed and its goats turn and there was a selected goat, but want to select another goat
+        game.selectedCellIndex = cellIndex
+        console.log(
+          "Goat player selected another goat, updating the selectedCellIndex"
         )
       } else if (game.selectedCellIndex !== -1) {
         // Before performing the move based on the reachable Cell indexes and tiger jumpable indexes
@@ -916,7 +928,7 @@ Rune.initLogic({
 
       game.gameStarted = true
       // Update the goats count and the tiger count
-      game.piecesCount.goatCount = game.boardType === 0 ? 15 : 20
+      game.piecesCount.goatCount = game.boardType === 0 ? 3 : 20
       game.piecesCount.tigerCount = game.boardType === 0 ? 3 : 4
       game.piecesCount.goatsRemainingCount = game.piecesCount.goatCount
 
@@ -942,45 +954,101 @@ Rune.initLogic({
   },
   events: {
     playerJoined: (playerId, { game }) => {
-      // Add the new player to the players list
-      game.playerIds.push(playerId)
-      // Reset the playing with bot flag
-      game.playingWithBot = false
-      // Remove any bot player from the list
-      game.playerIds = game.playerIds.filter((id) => id !== "bot")
-
-      // If the game has started, update any cells that had bot as player
-      if (game.gameStarted) {
-        for (let i = 0; i < game.cells.length; i++) {
-          if (game.cells[i].playerId === "bot") {
-            game.cells[i].playerId = playerId
-          }
+      // If a bot is currently playing, replace it with the new player
+      const botIndex = game.playerIds.indexOf("bot")
+      if (botIndex !== -1) {
+        // Transfer bot's selections to the new player
+        if (game.playerPieceSelections["bot"] !== undefined) {
+          game.playerPieceSelections[playerId] =
+            game.playerPieceSelections["bot"]
+          delete game.playerPieceSelections["bot"]
         }
-      }
+        if (game.playerBoardSelections["bot"] !== undefined) {
+          game.playerBoardSelections[playerId] =
+            game.playerBoardSelections["bot"]
+          delete game.playerBoardSelections["bot"]
+        }
 
-      // Reset bot-related flags
-      if (game.lastMovePlayerId !== playerId) {
+        // Replace bot in playerIds
+        game.playerIds[botIndex] = playerId
+
+        // Reset game state to prevent inconsistencies
+        game.selectedCellIndex = -1
         game.botTurn = false
         game.botTurnAt = 0
+
+        // Transfer cells from bot to new player
+        if (game.gameStarted) {
+          for (let i = 0; i < game.cells.length; i++) {
+            if (game.cells[i].playerId === "bot") {
+              game.cells[i].playerId = playerId
+            }
+          }
+        }
+
+        // Handle turn transfer
+        if (game.lastMovePlayerId === "bot") {
+          // Bot just moved, so next turn should be the player after bot, which is now the new player
+          game.lastMovePlayerId = playerId
+        } else if (game.botTurn) {
+          // Bot was about to move, so set turn to new player
+          const botIndex = game.playerIds.indexOf(playerId) // since we replaced
+          const prevIndex =
+            botIndex === 0 ? game.playerIds.length - 1 : botIndex - 1
+          game.lastMovePlayerId = game.playerIds[prevIndex]
+          game.botTurn = false // since new player is human
+        }
+      } else {
+        // Add new player to the game
+        game.playerIds.push(playerId)
       }
 
-      if (game.lastMovePlayerId === "bot") {
-        game.lastMovePlayerId = playerId
-      }
+      // Reset playing with bot flag since we now have multiple players
+      game.playingWithBot = false
     },
 
     playerLeft: (playerId, { game }) => {
-      // Remove the player from the list
-      game.playerIds = game.playerIds.filter((id) => id !== playerId)
+      const playerIndex = game.playerIds.indexOf(playerId)
+      if (playerIndex === -1) return // Player not found
 
-      // If there's still at least one player, set playing with bot
-      if (game.playerIds.length > 0) {
-        game.playingWithBot = true
+      // If only one human player remains, replace the leaving player with a bot
+      const humanPlayers = game.playerIds.filter((id) => id !== "bot")
+      if (humanPlayers.length === 2 && humanPlayers.includes(playerId)) {
+        // Replace leaving player with bot
+        game.playerIds[playerIndex] = "bot"
 
-        // Add a bot player
-        game.playerIds.push("bot")
+        // Transfer leaving player's selections to bot
+        if (game.playerPieceSelections[playerId] !== undefined) {
+          game.playerPieceSelections["bot"] =
+            game.playerPieceSelections[playerId]
+          delete game.playerPieceSelections[playerId]
+        }
+        if (game.playerBoardSelections[playerId] !== undefined) {
+          game.playerBoardSelections["bot"] =
+            game.playerBoardSelections[playerId]
+          delete game.playerBoardSelections[playerId]
+        }
 
-        // If the game has started, update any cells that had the leaving player
+        // Determine if it's now the bot's turn
+        let currentPlayerId = game.playerIds[0]
+        if (game.lastMovePlayerId) {
+          const lastIndex = game.playerIds.indexOf(game.lastMovePlayerId)
+          if (lastIndex !== -1) {
+            const nextIndex = (lastIndex + 1) % game.playerIds.length
+            currentPlayerId = game.playerIds[nextIndex]
+          }
+        }
+        if (currentPlayerId === "bot") {
+          // Set lastMovePlayerId to the previous player so that next is bot
+          const botIndex = game.playerIds.indexOf("bot")
+          const prevIndex =
+            botIndex === 0 ? game.playerIds.length - 1 : botIndex - 1
+          game.lastMovePlayerId = game.playerIds[prevIndex]
+          game.botTurn = true
+          game.botTurnAt = Rune.gameTime() + 1500
+        }
+
+        // Clear the cells of the leaving player
         if (game.gameStarted) {
           for (let i = 0; i < game.cells.length; i++) {
             if (game.cells[i].playerId === playerId) {
@@ -989,15 +1057,42 @@ Rune.initLogic({
           }
         }
 
-        // Set bot turn flags
-        if (game.lastMovePlayerId !== playerId) {
-          game.botTurn = true
-          game.botTurnAt = Rune.gameTime() + 1500
+        game.playingWithBot = true
+      } else {
+        // Remove the leaving player
+        game.playerIds = game.playerIds.filter((id) => id !== playerId)
+        delete game.playerPieceSelections[playerId]
+        delete game.playerBoardSelections[playerId]
+
+        // Remove their pieces from the board
+        if (game.gameStarted) {
+          for (let i = 0; i < game.cells.length; i++) {
+            if (game.cells[i].playerId === playerId) {
+              game.cells[i].playerId = null
+            }
+          }
         }
 
-        // If it was the leaving player's turn, make it the bot's turn
+        // If it was leaving player's turn, advance turn
         if (game.lastMovePlayerId === playerId) {
-          game.lastMovePlayerId = "bot"
+          if (game.playerIds.length > 0) {
+            const currentIndex = game.playerIds.indexOf(game.lastMovePlayerId)
+            const nextIndex = (currentIndex + 1) % game.playerIds.length
+            game.lastMovePlayerId = game.playerIds[nextIndex]
+            game.botTurn = game.lastMovePlayerId === "bot"
+            if (game.botTurn) {
+              game.botTurnAt = Rune.gameTime() + 1500
+            }
+          }
+        }
+
+        // If now only one player left, set playing with bot
+        if (game.playerIds.length === 1 && game.playerIds[0] !== "bot") {
+          game.playingWithBot = true
+          game.playerIds.push("bot")
+          // Assign opposite piece to bot
+          const humanPiece = game.playerPieceSelections[game.playerIds[0]]
+          game.playerPieceSelections["bot"] = humanPiece === 0 ? 1 : 0
         }
       }
     },
