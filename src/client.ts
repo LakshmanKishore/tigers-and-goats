@@ -19,6 +19,28 @@ const gamePage = document.getElementById("gamePage")!
 const boardTypeInfo = document.getElementById("boardTypeInfo")!
 const pieceTypeInfo = document.getElementById("pieceTypeInfo")!
 
+// Help modal elements
+const questionMarkBtn = document.getElementById("question-mark")!
+const modal = document.getElementById("myModal")!
+const closeBtn = document.getElementsByClassName("close")[0]!
+
+// Setup question mark button to show instructions
+questionMarkBtn.addEventListener("click", () => {
+  modal.style.display = modal.style.display === "block" ? "none" : "block"
+})
+
+// Setup close button
+closeBtn.addEventListener("click", () => {
+  modal.style.display = "none"
+})
+
+// When the user clicks anywhere outside of the modal, close it
+window.addEventListener("click", (event) => {
+  if (event.target == modal) {
+    modal.style.display = "none"
+  }
+})
+
 // Audio
 const selectSound = new Audio(selectSoundAudio)
 

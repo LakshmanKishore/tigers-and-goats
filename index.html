@@ -43,6 +43,36 @@
         <div id="gameBoard" class="game-board"></div>
       </div>
     </main>
+
+    <!-- Help button -->
+    <div id="question-mark"></div>
+
+    <!-- Help modal overlay -->
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="modal-question-mark">
+          <h3>How to Play Tigers and Goats</h3>
+
+          <h4>Introduction</h4>
+          <p>- Tigers and Goats is a strategic board game where one player controls 3-4 tigers and the other controls 15-20 goats.</p>
+
+          <h4>Objective</h4>
+          <p>- Tigers: Capture all goats by jumping over them.</p>
+          <p>- Goats: Block all tigers so they can't move.</p>
+
+          <h4>Phases</h4>
+          <p>- Placement Phase: Goats are placed on the board one by one, alternating with tiger moves.</p>
+          <p>- Movement Phase: Both players move their pieces to adjacent positions.</p>
+
+          <h4>Rules</h4>
+          <p>- Tigers can jump over goats to capture them (one per turn).</p>
+          <p>- Goats can only move after all are placed on the board.</p>
+          <p>- Game ends when all goats are captured or tigers are blocked.</p>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="/src/logic.ts"></script>
     <script type="module" src="/src/client.ts"></script>
   </body>
