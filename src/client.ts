@@ -5,6 +5,8 @@ import { GameState, Cell } from "./logic"
 
 import selectSoundAudio from "./assets/select.wav"
 import robotImage from "./assets/robot.png"
+import tigerMask from "./assets/tiger_mask.svg"
+import goatMask from "./assets/goat_mask.svg"
 import { Board, getNextBestMove } from "./min_max"
 
 // DOM Elements
@@ -28,27 +30,32 @@ let playerElements: HTMLElement[] = []
 let yourPlayerId: PlayerId | undefined
 let isPlayingWithBot: boolean = false
 let cellImages: SVGImageElement[] = []
+// Masks for tiger/goat overlays per cell
+let cellMaskImages: SVGImageElement[] = []
 
 // Bot-related state
 let botMoveTimer: number | null = null
 let pendingBotMove: number | null = null
 
-// Piece images
-const pieceImages = ["src/assets/tiger.png", "src/assets/goat.png"]
+// Piece mask SVGs (used as background overlays)
+const pieceMasks = [tigerMask, goatMask]
 
 // Board styling constants
-const BOARD_STROKE_COLOR = "#e6e6e6"
+// const BOARD_STROKE_COLOR = "#e6e6e6"
+const BOARD_STROKE_COLOR = "#444444ff"
 const BOARD_STROKE_WIDTH = 5
 const BOARD_STROKE_WIDTH_THICK = 2
 
 // Cell/Ellipse styling constants
 const FILL_COLOR = "#ff6b35" // Orange color for clickable indication
+// SVG xlink namespace
+// const XLINK_NS = "http://www.w3.org/1999/xlink"
 
 // Board-specific sizing constants
 const BOARD_A_ELLIPSE_SIZE = "8" // Smaller for Board A's larger coordinate system
-const BOARD_A_CELL_SIZE = "35"
+const BOARD_A_CELL_SIZE = "55"
 const BOARD_B_ELLIPSE_SIZE = "5" // Larger for Board B's smaller coordinate system
-const BOARD_B_CELL_SIZE = "20"
+const BOARD_B_CELL_SIZE = "15"
 
 /**
  * Creates BoardA SVG (Triangle/Diamond pattern) dynamically
@@ -56,8 +63,9 @@ const BOARD_B_CELL_SIZE = "20"
  */
 function createBoardASVG(): SVGElement {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-  svg.setAttribute("viewBox", "0 -30 800 550")
+  svg.setAttribute("viewBox", "0 -50 800 600")
   svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+  svg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
   svg.style.width = "110vw"
   // svg.style.height = "100%"
 
@@ -129,6 +137,7 @@ function createBoardBSVG(): SVGElement {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
   svg.setAttribute("viewBox", "0 0 300 300")
   svg.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+  svg.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
   svg.style.width = "105vw"
   // svg.style.height = "100%"
 
@@ -270,8 +279,12 @@ function createCellElements(
   const ellipseSize = isBoardA ? BOARD_A_ELLIPSE_SIZE : BOARD_B_ELLIPSE_SIZE
   const cellSize = isBoardA ? BOARD_A_CELL_SIZE : BOARD_B_CELL_SIZE
 
-  // Create ellipses and images for each cell
-  cellImages = cells.map((_, index) => {
+  // Create ellipses, avatar images, and mask overlays for each cell
+  cellImages.forEach((img) => img.remove())
+  cellMaskImages.forEach((img) => img.remove())
+  cellImages = []
+  cellMaskImages = []
+  cells.forEach((_, index) => {
     const ellipse = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "ellipse"
@@ -282,57 +295,72 @@ function createCellElements(
     ellipse.setAttribute("ry", ellipseSize)
     ellipse.setAttribute("style", `fill: ${FILL_COLOR} `)
 
-    // Create a svg image element which will then be used to set the image of avatar
-    const image = document.createElementNS(
+    // Create avatar image element
+    const avatarImage = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "image"
     )
 
-    image.setAttribute("x", (cells[index].x - +cellSize).toString())
-    image.setAttribute("y", (cells[index].y - +cellSize).toString())
-    image.setAttribute("width", (+cellSize * 2).toString())
-    image.setAttribute("height", (+cellSize * 2).toString())
+    // Position and size avatar image
+    avatarImage.setAttribute("x", (cells[index].x - +cellSize).toString())
+    avatarImage.setAttribute("y", (cells[index].y - +cellSize).toString())
+    avatarImage.setAttribute("width", (+cellSize * 2).toString())
+    avatarImage.setAttribute("height", (+cellSize * 2).toString())
 
     // Add click event listener for valid players
     if (yourPlayerId && playerIds.includes(yourPlayerId)) {
-      image.addEventListener("click", () => {
-        const fromBot = image.getAttribute("from-bot")
+      avatarImage.addEventListener("click", () => {
+        const fromBot = avatarImage.getAttribute("from-bot")
         Rune.actions.performCellAction({
           cellIndex: index,
           fromBot:
             fromBot === null ? false : fromBot === "false" ? false : true,
         })
       })
-      image.style.cursor = "pointer"
+      avatarImage.style.cursor = "pointer"
     }
 
-    // Check if board has a group element (Board B) or not (Board A)
-    const group = gameBoardSVG.querySelector("g")
-    if (group) {
-      // Board B has a group element
-      group.appendChild(ellipse)
-      group.appendChild(image)
-    } else {
-      // Board A has no group element
-      gameBoardSVG.appendChild(ellipse)
-      gameBoardSVG.appendChild(image)
-    }
-    return image
+    // Append elements to SVG (mask as background, avatar on top)
+    const parent = gameBoardSVG.querySelector("g") || gameBoardSVG
+    parent.appendChild(ellipse)
+
+    // Create mask background - larger size to show ears/features around the avatar
+    const maskImage = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "image"
+    )
+    const maskSize = +cellSize * 3 // Make mask bigger than avatar
+    maskImage.setAttribute("x", (cells[index].x - maskSize / 2).toString())
+    maskImage.setAttribute("y", (cells[index].y - maskSize / 2).toString())
+    maskImage.setAttribute("width", maskSize.toString())
+    maskImage.setAttribute("height", maskSize.toString())
+    maskImage.style.opacity = "0.8" // Make it slightly transparent
+    parent.appendChild(maskImage)
+
+    // Avatar goes on top, smaller than mask
+    parent.appendChild(avatarImage)
+
+    // Initialize sources to empty; updateCellImages will set them
+    avatarImage.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "")
+    maskImage.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "")
+    // Store images for later updates
+    cellImages.push(avatarImage)
+    cellMaskImages.push(maskImage)
   })
 
   return cellImages
 }
 
-function updateCellImages({
-  game,
-}: {
+function updateCellImages(params: {
   game: {
     cells: Cell[]
     playerIds: string[]
     selectedCellIndex: number
+    playerPieceSelections: Record<string, number | null>
   }
 }) {
-  const { cells, playerIds, selectedCellIndex } = game
+  const { cells, playerIds, selectedCellIndex, playerPieceSelections } =
+    params.game
 
   // Skip if cellImages not initialized yet
   if (cellImages.length === 0) {
@@ -370,11 +398,37 @@ function updateCellImages({
       (cellValue !== null ? playerIds.indexOf(cellValue) : -1).toString()
     )
 
-    // If cell has a player id then have to show player id's avatar
-    if (cellValue && playersInfo[cellValue]) {
-      cellImage.setAttribute("href", playersInfo[cellValue].avatarUrl)
+    // Show player avatar in the top layer (smaller, centered)
+    if (cellValue !== null && playersInfo[cellValue]) {
+      cellImage.setAttributeNS(
+        "http://www.w3.org/1999/xlink",
+        "xlink:href",
+        playersInfo[cellValue].avatarUrl
+      )
     } else {
-      cellImage.setAttribute("href", "")
+      cellImage.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "")
+    }
+
+    // Show piece mask (tiger/goat) as background - larger to show ears/features
+    if (cellMaskImages[index]) {
+      if (cellValue !== null) {
+        const pieceType = playerPieceSelections[cellValue] ?? 0
+        const maskSrc = pieceMasks[pieceType]
+        cellMaskImages[index].setAttributeNS(
+          "http://www.w3.org/1999/xlink",
+          "xlink:href",
+          maskSrc
+        )
+        // Make mask visible with transparency
+        cellMaskImages[index].style.opacity = "0.7"
+      } else {
+        cellMaskImages[index].setAttributeNS(
+          "http://www.w3.org/1999/xlink",
+          "xlink:href",
+          ""
+        )
+        cellMaskImages[index].style.opacity = "0"
+      }
     }
 
     // If the cell is a selected cell then we should dim it
@@ -491,8 +545,16 @@ function switchToGamePage(cells?: Cell[], playerIds: string[] = []) {
   }
 
   if (selectedPieceType !== null) {
+    // Determine avatar for the current player (fallback to robot image)
+    const currentPlayerAvatar = yourPlayerId
+      ? Rune.getPlayerInfo(yourPlayerId)?.avatarUrl || robotImage
+      : robotImage
+    const maskSrc = pieceMasks[selectedPieceType]
     pieceTypeInfo.innerHTML = `
-      <img src="${pieceImages[selectedPieceType]}" alt="Piece Type" />
+      <div class="piece-preview">
+        <img class="piece-mask" src="${maskSrc}" alt="Mask" />
+        <img class="piece-avatar" src="${currentPlayerAvatar}" alt="Avatar" />
+      </div>
       <span>${selectedPieceType === 0 ? "Tiger" : "Goat"}</span>
     `
   }
