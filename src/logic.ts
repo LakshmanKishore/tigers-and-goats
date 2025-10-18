@@ -34,6 +34,7 @@ export interface GameState {
   botTurnAt: number
   selectedCellIndex: number
   piecesCount: PiecesCount
+  winner: PlayerId | null
 }
 
 type GameActions = {
@@ -502,6 +503,7 @@ Rune.initLogic({
       goatsTakenCount: 0,
       goatsRemainingCount: 0,
     },
+    winner: null,
   }),
   actions: {
     performCellAction: (
@@ -587,7 +589,19 @@ Rune.initLogic({
         }
       }
 
-      if (game.selectedCellIndex !== -1) {
+      // If it's tigers move and there was a selected tiger, but want to select another tiger
+      if (
+        game.selectedCellIndex !== -1 &&
+        game.playerPieceSelections[playerId] === 0 &&
+        cellIndex !== game.selectedCellIndex &&
+        game.cells[cellIndex].playerId === playerId
+      ) {
+        // If one tiger is selected and the player is trying to select another tiger then we should update the selectedCellIndex
+        game.selectedCellIndex = cellIndex
+        console.log(
+          "Tiger player selected another tiger, updating the selectedCellIndex"
+        )
+      } else if (game.selectedCellIndex !== -1) {
         // Before performing the move based on the reachable Cell indexes and tiger jumpable indexes
         const selectedCell = game.cells[game.selectedCellIndex]
 
@@ -727,6 +741,36 @@ Rune.initLogic({
           }
         })
         game.piecesCount.tigerBlockedCount = blockedTigers
+      }
+
+      // Check for game over conditions
+      if (game.piecesCount.goatsTakenCount === game.piecesCount.goatCount) {
+        // Tigers win
+        game.winner = tigerPlayerId!
+      } else if (
+        game.piecesCount.tigerBlockedCount === game.piecesCount.tigerCount
+      ) {
+        // Goats win
+        const goatPlayerId = Object.keys(game.playerPieceSelections).find(
+          (id) => game.playerPieceSelections[id] === 1
+        )
+        game.winner = goatPlayerId!
+      }
+
+      if (game.winner) {
+        const finalPlayerStatuses: Record<PlayerId, "WON" | "LOST"> = {}
+        const humanPlayers = game.playerIds.filter((id) => id !== "bot")
+        humanPlayers.forEach((id) => {
+          if (id === game.winner) {
+            finalPlayerStatuses[id] = "WON"
+          } else {
+            finalPlayerStatuses[id] = "LOST"
+          }
+        })
+        Rune.gameOver({
+          players: finalPlayerStatuses,
+          delayPopUp: false,
+        })
       }
 
       // if (game.winCombo) {
@@ -872,7 +916,7 @@ Rune.initLogic({
 
       game.gameStarted = true
       // Update the goats count and the tiger count
-      game.piecesCount.goatCount = game.boardType === 0 ? 3 : 20
+      game.piecesCount.goatCount = game.boardType === 0 ? 15 : 20
       game.piecesCount.tigerCount = game.boardType === 0 ? 3 : 4
       game.piecesCount.goatsRemainingCount = game.piecesCount.goatCount
 

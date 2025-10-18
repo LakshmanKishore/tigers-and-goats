@@ -307,7 +307,6 @@ function createCellElements(
     avatarImage.setAttribute("y", (cells[index].y - +cellSize).toString())
     avatarImage.setAttribute("width", (+cellSize * 2).toString())
     avatarImage.setAttribute("height", (+cellSize * 2).toString())
-    console.log("cell size:", cellSize)
 
     // Add click event listener for valid players
     if (yourPlayerId && playerIds.includes(yourPlayerId)) {
@@ -584,6 +583,13 @@ function updateGameStats(game: GameState) {
       </div>
     </div>
   `
+
+  // Dim the screen if it's not the current player's turn
+  if (currentPlayerId !== yourPlayerId) {
+    gamePage.classList.add("dimmed-turn")
+  } else {
+    gamePage.classList.remove("dimmed-turn")
+  }
 }
 
 /**
@@ -875,6 +881,7 @@ function makeBotMove(game: GameState) {
   pendingBotMove = window.setTimeout(() => {
     try {
       console.log("Bot is thinking about its move...")
+      // If one tiger is selected and the player is trying to select another tiger then we should update the
       console.log("Game state for bot:", {
         lastMovePlayerId: currentGameState.lastMovePlayerId,
         playerPieceSelections: currentGameState.playerPieceSelections,
@@ -950,6 +957,21 @@ Rune.initClient({
     if (gameStarted && cells) {
       switchToGamePage(cells, playerIds)
       updateGameStats(game)
+
+      // Dim the screen if not current player's turn
+      let currentPlayerId = ""
+      if (game.lastMovePlayerId === null) {
+        currentPlayerId = game.playerIds[0]
+      } else {
+        const currentIndex = game.playerIds.indexOf(game.lastMovePlayerId)
+        const nextIndex = (currentIndex + 1) % game.playerIds.length
+        currentPlayerId = game.playerIds[nextIndex]
+      }
+      if (currentPlayerId !== yourPlayerId) {
+        gamePage.classList.add("dimmed")
+      } else {
+        gamePage.classList.remove("dimmed")
+      }
     }
 
     updateCellImages({ game })
