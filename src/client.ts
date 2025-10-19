@@ -826,7 +826,20 @@ function startButtonHandler() {
  * Convert game state to Board object for min-max algorithm
  */
 function convertGameStateToBoard(gameState: GameState): Board {
-  const board = new Board()
+  const reachableCellIndexes = gameState.cells.map(
+    (cell) => cell.reachableCellIndexes
+  )
+  const tigerJumpableIndexes = gameState.cells.map(
+    (cell) => cell.tigerJumpableIndexes
+  )
+  const goatRemovalAfterTigerJumpIndexes = gameState.cells.map(
+    (cell) => cell.goatRemovalAfterTigerJumpIndexes
+  )
+  const board = new Board(
+    reachableCellIndexes,
+    tigerJumpableIndexes,
+    goatRemovalAfterTigerJumpIndexes
+  )
 
   // Set board size and connectivity based on board type
   board.board = new Array(gameState.cells.length).fill(0)
@@ -929,29 +942,8 @@ function makeBotMove(game: GameState) {
       console.log("Board current player:", gameBoard.currentPlayer)
       console.log("Board next action:", gameBoard.nextAction)
 
-      let bestMove: number
-
-      if (currentGameState.boardType === 1) {
-        // Board B: use random move instead of min-max
-        let possibleMoves: number[] = []
-        if (gameBoard.nextAction === "selectToPlace") {
-          possibleMoves = gameBoard.getAllEmptyLocations()
-        } else if (gameBoard.nextAction === "selectToMove") {
-          possibleMoves = gameBoard.possibleMovablePieces
-        } else if (gameBoard.nextAction === "selectDestination") {
-          possibleMoves = gameBoard.possibleMovableDestinations
-        }
-        if (possibleMoves.length > 0) {
-          const randomIndex = Math.floor(Math.random() * possibleMoves.length)
-          bestMove = possibleMoves[randomIndex]
-        } else {
-          bestMove = -1
-        }
-      } else {
-        // Board A: use min-max
-        const bestMoveResult = getNextBestMove(gameBoard)
-        bestMove = bestMoveResult.action
-      }
+      const bestMoveResult = getNextBestMove(gameBoard)
+      const bestMove = bestMoveResult.action
 
       // Make the bot's move
       if (bestMove !== undefined && bestMove >= 0) {

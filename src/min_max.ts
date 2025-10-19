@@ -107,11 +107,24 @@ class Board {
     [17, 21], // 22
   ]
 
-  constructor() {
+  constructor(
+    reachableCellIndexes?: number[][],
+    tigerJumpableIndexes?: number[][],
+    goatRemovalAfterTigerJumpIndexes?: number[][]
+  ) {
     // Initialize tigers at positions 0, 3, 4
     this.board[0] = 2
     this.board[3] = 2
     this.board[4] = 2
+    if (reachableCellIndexes) {
+      this.reachableCellIndexes = reachableCellIndexes
+    }
+    if (tigerJumpableIndexes) {
+      this.tigerJumpableIndexes = tigerJumpableIndexes
+    }
+    if (goatRemovalAfterTigerJumpIndexes) {
+      this.goatRemovalAfterTigerJumpIndexes = goatRemovalAfterTigerJumpIndexes
+    }
   }
 
   getAllEmptyLocations(): number[] {
@@ -729,11 +742,11 @@ class Board {
     if (player === 2) {
       // Tiger's perspective
       score =
-        -10 * blockedTigers +
-        6 * goatsCaptured +
+        -5 * blockedTigers +
+        10 * goatsCaptured +
         3 * capturableGoats +
         100 * (allGoatsCaptured ? 1 : 0) -
-        100 * (blockedTigers === 3 ? 1 : 0)
+        100 * (blockedTigers >= 3 ? 1 : 0)
     } else {
       // Goat's perspective
       score =
@@ -741,7 +754,7 @@ class Board {
         6 * goatsCaptured -
         3 * capturableGoats -
         100 * (allGoatsCaptured ? 1 : 0) +
-        100 * (blockedTigers === 3 ? 1 : 0)
+        100 * (blockedTigers >= 3 ? 1 : 0)
     }
 
     if (printHeuristics) {
@@ -842,7 +855,11 @@ class Board {
 
   // Deep clone method for creating copies of the board
   clone(): Board {
-    const cloned = new Board()
+    const cloned = new Board(
+      this.reachableCellIndexes,
+      this.tigerJumpableIndexes,
+      this.goatRemovalAfterTigerJumpIndexes
+    )
     cloned.board = [...this.board]
     cloned.nextAction = this.nextAction
     cloned.currentPlayer = this.currentPlayer
