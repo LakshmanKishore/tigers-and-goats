@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tigers and Goats - Min-Max Tree Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #e0e0e0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-canvas-area {
+            flex: 1;
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .board-input {
+            width: 100%;
+            height: 120px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 5px;
+            resize: vertical;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4299e1, #3182ce);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #3182ce, #2c5282);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(45deg, #38a169, #2f855a);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .settings label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .settings input, .settings select {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        #treeCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        #treeCanvas:active {
+            cursor: grabbing;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #2f855a;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+        }
+
+        .board-preview {
+            width: 100%;
+            height: 200px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .stat-item {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 16px;
+            color: #2d3748;
+        }
+
+        .stat-label {
+            color: #718096;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #4299e1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            color: #4a5568;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .zoom-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>🐅🐐 Min-Max Visualizer</h1>
+
+            <div id="status" class="status info">
+                Ready to visualize min-max algorithm
+            </div>
+
+            <div class="section">
+                <h3>📋 Initial Board State</h3>
+                <div class="settings">
+                    <label>Board Type:</label>
+                    <select id="boardType">
+                        <option value="0" selected>Board A (Triangle)</option>
+                        <option value="1">Board B (Grid)</option>
+                    </select>
+                </div>
+                <textarea id="boardInput" class="board-input" placeholder="Enter board state as 23 comma-separated numbers (0=empty, 1=goat, 2=tiger)">2,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0</textarea>
+                <div class="board-preview" id="boardPreview">
+                    <span style="color: #a0aec0;">Board preview will appear here</span>
+                </div>
+                <button class="btn btn-secondary" onclick="updateBoardPreview()">🔄 Update Preview</button>
+            </div>
+
+            <div class="section">
+                <h3>⚙️ Algorithm Settings</h3>
+                <div class="settings">
+                    <label>Max Depth:</label>
+                    <select id="maxDepth">
+                        <option value="2">2 (Fast)</option>
+                        <option value="3" selected>3 (Default)</option>
+                        <option value="4">4 (Slow)</option>
+                        <option value="5">5 (Very Slow)</option>
+                    </select>
+
+                    <label>Current Player:</label>
+                    <select id="currentPlayer">
+                        <option value="1">Goat (Minimizing)</option>
+                        <option value="2" selected>Tiger (Maximizing)</option>
+                    </select>
+
+                    <label>Goats Placed:</label>
+                    <input type="number" id="goatsPlaced" min="0" max="15" value="0">
+
+                    <label>Goats Captured:</label>
+                    <input type="number" id="goatsCaptured" min="0" max="15" value="0">
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🎮 Controls</h3>
+                <div class="controls">
+                    <button id="expandTreeBtn" class="btn btn-primary" onclick="expandMinMaxTree()">
+                        🌳 Expand Min-Max Tree
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetVisualization()">
+                        🔄 Reset Visualization
+                    </button>
+                    <button class="btn btn-secondary" onclick="centerTree()">
+                        🎯 Center Tree
+                    </button>
+                </div>
+            </div>
+
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <div>Computing min-max tree...</div>
+            </div>
+
+            <div class="section">
+                <h3>📊 Tree Statistics</h3>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="nodeCount">0</div>
+                        <div class="stat-label">Nodes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="maxDepthReached">0</div>
+                        <div class="stat-label">Max Depth</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="bestMove">-</div>
+                        <div class="stat-label">Best Move</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="bestValue">-</div>
+                        <div class="stat-label">Best Value</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-canvas-area">
+            <canvas id="treeCanvas"></canvas>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <button class="zoom-btn" onclick="zoomOut()">−</button>
+                <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">⌂</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="src/min_max.js"></script>
+    <script src="minmax-visualizer.js"></script>
+</body>
+</html>

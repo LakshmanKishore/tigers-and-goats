@@ -7,7 +7,7 @@ import selectSoundAudio from "./assets/select.wav"
 import robotImage from "./assets/robot.png"
 import tigerMask from "./assets/tiger_mask.svg"
 import goatMask from "./assets/goat_mask.svg"
-import { Board, getNextBestMove } from "./min_max"
+import { Board, getNextBestMove } from "./min_max.ts"
 
 // DOM Elements
 const playersSection = document.getElementById("playersSection")!
