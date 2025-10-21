@@ -12,6 +12,8 @@ let canvas, ctx
 
 let treeData = null
 
+let currentBoardState = null
+
 let cameraX = 0,
   cameraY = 0
 
@@ -407,6 +409,7 @@ function createCellElements(gameBoardSVG, boardState) {
       // Cycle: 0 (empty) -> 1 (goat) -> 2 (tiger) -> 0
       const newState = (boardState[i] + 1) % 3
       boardState[i] = newState
+      currentBoardState[i] = newState // Update global state
 
       // Update the image
       image.setAttributeNS(
@@ -414,10 +417,6 @@ function createCellElements(gameBoardSVG, boardState) {
         "xlink:href",
         createPieceImage(newState)
       )
-
-      // Update the textarea
-      const boardInput = document.getElementById("boardInput")
-      boardInput.value = boardState.join(",")
     }
 
     ellipse.addEventListener("click", clickHandler)
@@ -439,14 +438,10 @@ document.addEventListener("DOMContentLoaded", function () {
   // Add event listener for board type changes
   const boardTypeSelect = document.getElementById("boardType")
   boardTypeSelect.addEventListener("change", function () {
-    const boardType = parseInt(boardTypeSelect.value)
-    updateBoardInput(boardType)
     updateBoardPreview()
   })
 
-  // Initialize board input for default board type
-  updateBoardInput(0)
-
+  // Initialize board preview for default board type
   updateBoardPreview()
 })
 
@@ -789,6 +784,22 @@ function renderTree() {
   // Render nodes
 
   renderNodes(treeData.rootNode, positions, bestPathSet)
+
+  // Render hover preview on top of everything
+
+  if (hoveredNode) {
+    const nodePos = positions.get(hoveredNode)
+    if (nodePos) {
+      const boardType = parseInt(document.getElementById("boardType").value)
+      renderNodeBoardPreview(
+        nodePos.x + NODE_CONFIG.radius + 10,
+        nodePos.y - 70,
+        hoveredNode.boardState,
+        boardType,
+        hoveredNode.action
+      )
+    }
+  }
 }
 
 /**
@@ -905,18 +916,6 @@ function renderNodes(node, positions, bestPathSet) {
     ctx.fillText(`A:${node.action}`, nodePos.x, nodePos.y + 5)
   }
 
-  // Draw small board preview if hovered
-
-  if (node === hoveredNode) {
-    const boardType = parseInt(document.getElementById("boardType").value)
-    renderNodeBoardPreview(
-      nodePos.x + NODE_CONFIG.radius + 10,
-      nodePos.y - 70,
-      node.boardState,
-      boardType
-    )
-  }
-
   // Recursively render child nodes
 
   for (const child of node.children) {
@@ -930,7 +929,7 @@ function renderNodes(node, positions, bestPathSet) {
 
  */
 
-function renderNodeBoardPreview(x, y, boardState, boardType) {
+function renderNodeBoardPreview(x, y, boardState, boardType, focusingCell) {
   const previewSize = 120
 
   // Draw background
@@ -948,6 +947,9 @@ function renderNodeBoardPreview(x, y, boardState, boardType) {
 
   // Calculate scale to fit preview
   const scale = previewSize / (boardType === 0 ? 800 : 300)
+  const boardHeight = boardType === 0 ? 500 : 300
+  const offsetY = (previewSize - boardHeight * scale) / 2
+  ctx.translate(0, offsetY)
 
   // Draw board lines with scaled coordinates
   ctx.strokeStyle = BOARD_STROKE_COLOR
@@ -1033,7 +1035,7 @@ function renderNodeBoardPreview(x, y, boardState, boardType) {
 
     const cellX = x + (boardType === 1 ? 12 : 0) + pos.x * scale
     // const cellY = y - 8 + (pos.y + (boardType === 0 ? 50 : 0)) * scale // Board A y-offset
-    const cellY = y + (boardType === 0 ? 0 : 12) + pos.y * scale // Board A y-offset
+    const cellY = y + (boardType === 0 ? offsetY : 12) + pos.y * scale // Board A y-offset
 
     // Draw clickable area background
     const ellipseRadiusX = boardType === 0 ? 3 : 2.5
@@ -1095,6 +1097,23 @@ function renderNodeBoardPreview(x, y, boardState, boardType) {
       // Empty - just outline
       ctx.strokeStyle = "#2d3748"
       ctx.lineWidth = 0.1
+      ctx.stroke()
+    }
+
+    // If it's focusing Cell then we should highlight it
+    if (focusingCell !== undefined && i === focusingCell) {
+      ctx.beginPath()
+      ctx.ellipse(
+        cellX,
+        cellY,
+        ellipseRadiusX,
+        ellipseRadiusY,
+        0,
+        0,
+        2 * Math.PI
+      )
+      ctx.strokeStyle = "#0000ff"
+      ctx.lineWidth = 2
       ctx.stroke()
     }
   }
@@ -1209,23 +1228,6 @@ function resetVisualization() {
 
  */
 
-function updateBoardInput(boardType) {
-  const boardInput = document.getElementById("boardInput")
-  const expectedLength = boardType === 0 ? 23 : 25
-  const defaultState = new Array(expectedLength).fill(0).join(",")
-
-  boardInput.placeholder = `Enter board state as ${expectedLength} comma-separated numbers (0=empty, 1=goat, 2=tiger)`
-
-  // Only set default value if input is empty or has the wrong length
-  const currentValue = boardInput.value.trim()
-  if (
-    currentValue === "" ||
-    currentValue.split(",").length !== expectedLength
-  ) {
-    boardInput.value = defaultState
-  }
-}
-
 /**
 
  * Update board preview when input changes
@@ -1234,14 +1236,23 @@ function updateBoardInput(boardType) {
 
 function updateBoardPreview() {
   const previewElement = document.getElementById("boardPreview")
-  const boardInput = document.getElementById("boardInput")
   const boardTypeSelect = document.getElementById("boardType")
   const boardType = parseInt(boardTypeSelect.value)
 
   try {
-    const boardState = boardInput.value
-      .split(",")
-      .map((s) => parseInt(s.trim()))
+    // Use default board state based on board type if not initialized
+    if (
+      !currentBoardState ||
+      currentBoardState.length !== (boardType === 0 ? 23 : 25)
+    ) {
+      const defaultState =
+        boardType === 0
+          ? "2,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
+          : "2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,2"
+      currentBoardState = defaultState.split(",").map((s) => parseInt(s.trim()))
+    }
+
+    const boardState = [...currentBoardState] // Use current state
 
     // Validate board state length based on board type
     const expectedLength = boardType === 0 ? 23 : 25
@@ -1283,7 +1294,6 @@ async function expandMinMaxTree() {
     // Get input parameters
     const boardTypeSelect = document.getElementById("boardType")
     const boardType = parseInt(boardTypeSelect.value)
-    const boardInput = document.getElementById("boardInput").value
 
     const maxDepth = parseInt(document.getElementById("maxDepth").value)
 
@@ -1297,26 +1307,33 @@ async function expandMinMaxTree() {
       document.getElementById("goatsCaptured").value
     )
 
-    // Parse board state
+    // Use current board state
+    if (!currentBoardState) {
+      // Initialize with default if not set
+      const defaultState =
+        boardType === 0
+          ? "2,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
+          : "2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,2"
+      currentBoardState = defaultState.split(",").map((s) => parseInt(s.trim()))
+    }
 
-    const boardState = boardInput.split(",").map((s) => {
-      const val = parseInt(s.trim())
+    const boardState = [...currentBoardState] // Copy current state
 
-      if (isNaN(val) || val < 0 || val > 2) {
-        throw new Error(
-          "Board values must be 0 (empty), 1 (goat), or 2 (tiger)"
-        )
-      }
-
-      return val
-    })
-
-    // Validate board state length based on board type
+    // Validate board state
     const expectedLength = boardType === 0 ? 23 : 25
     if (boardState.length !== expectedLength) {
       throw new Error(
         `Board ${boardType === 0 ? "A" : "B"} must have exactly ${expectedLength} positions`
       )
+    }
+
+    // Additional validation for each value
+    for (const val of boardState) {
+      if (isNaN(val) || val < 0 || val > 2) {
+        throw new Error(
+          "Board values must be 0 (empty), 1 (goat), or 2 (tiger)"
+        )
+      }
     }
 
     updateStatus("Creating game board...", "info")
@@ -1517,8 +1534,6 @@ async function expandMinMaxTree() {
 // Make functions available globally for HTML event handlers
 
 window.expandMinMaxTree = expandMinMaxTree
-
-window.updateBoardPreview = updateBoardPreview
 
 window.resetVisualization = resetVisualization
 

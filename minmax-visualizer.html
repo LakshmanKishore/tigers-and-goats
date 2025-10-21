@@ -60,17 +60,6 @@
             font-size: 1.1rem;
         }
 
-        .board-input {
-            width: 100%;
-            height: 120px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 5px;
-            resize: vertical;
-        }
-
         .controls {
             display: flex;
             flex-direction: column;
@@ -281,11 +270,9 @@
                         <option value="1">Board B (Grid)</option>
                     </select>
                 </div>
-                <textarea id="boardInput" class="board-input"></textarea>
                 <div class="board-preview" id="boardPreview">
                     <span style="color: #a0aec0;">Board preview will appear here</span>
                 </div>
-                <button class="btn btn-secondary" onclick="updateBoardPreview()">🔄 Update Preview</button>
             </div>
 
             <div class="section">
