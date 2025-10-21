@@ -855,12 +855,11 @@ function convertGameStateToBoard(gameState: GameState): Board {
 
   // Determine which player ID is the bot
   const botPlayerId = "bot"
-  const humanPlayerId = gameState.playerIds.find((id) => id !== botPlayerId)
+  const humanPlayerId = gameState.playerIds.find((id) => id !== botPlayerId)!
 
   // Get piece assignments (0 = Tiger, 1 = Goat)
   const botPieceType = gameState.playerPieceSelections[botPlayerId] || 0
-  const humanPieceType =
-    gameState.playerPieceSelections[humanPlayerId || ""] || 1
+  const humanPieceType = gameState.playerPieceSelections[humanPlayerId]
 
   // Set board state based on cells
   for (let i = 0; i < gameState.cells.length; i++) {

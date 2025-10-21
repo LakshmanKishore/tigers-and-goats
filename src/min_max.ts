@@ -1133,19 +1133,27 @@ function getNextBestMove(gameBoard: Board): MinMaxResult {
   const startTime = Date.now()
 
   // Determine if we should maximize or minimize based on current player
-  const isMaximizing = gameBoard.currentPlayer === 2 // Maximize for tiger
+  const aiPlayer = gameBoard.currentPlayer
+  const isMaximizing = gameBoard.currentPlayer == aiPlayer
 
   for (const nextAction of nextActionPossiblePositions) {
-    const gameboardCopy = gameBoard.clone()
+    const gameBoardCopy = gameBoard.clone()
+    const success = gameBoardCopy.performNextMove(nextAction)
+    if (!success) {
+      console.log(
+        `Skipping invalid move at position ${nextAction} during min-max evaluation`
+      )
+      continue
+    }
     const result = minMaxWithAlphaBetaPruning(
-      gameboardCopy,
-      depth,
+      gameBoardCopy,
+      depth - 1,
       nextAction,
       isMaximizing,
       -9999999999,
       9999999999,
-      true,
-      gameboardCopy.currentPlayer
+      false,
+      aiPlayer
     )
     minMaxValues.push(result)
   }
@@ -1165,20 +1173,11 @@ function getNextBestMove(gameBoard: Board): MinMaxResult {
       movesPerformed: [],
     }
   }
-  // Choose the best move based on player (max for tiger, min for goat)
+  // Choose the best move - AI always maximizes its value
   // If multiple moves have the same value, pick randomly among them
-  let bestMove: MinMaxResult
-  if (gameBoard.currentPlayer === 2) {
-    // Tiger: maximize
-    const maxValue = Math.max(...minMaxValues.map((m) => m.value))
-    const bestMoves = minMaxValues.filter((m) => m.value === maxValue)
-    bestMove = bestMoves[Math.floor(Math.random() * bestMoves.length)]
-  } else {
-    // Goat: minimize
-    const minValue = Math.min(...minMaxValues.map((m) => m.value))
-    const bestMoves = minMaxValues.filter((m) => m.value === minValue)
-    bestMove = bestMoves[Math.floor(Math.random() * bestMoves.length)]
-  }
+  const maxValue = Math.max(...minMaxValues.map((m) => m.value))
+  const bestMoves = minMaxValues.filter((m) => m.value === maxValue)
+  const bestMove = bestMoves[Math.floor(Math.random() * bestMoves.length)]
 
   console.log(
     `Best Move: position ${bestMove.action} with score ${bestMove.value}`
@@ -1564,6 +1563,16 @@ function minMaxWithAlphaBetaPruning(
   } else {
     // Destination selection phase
     nextActionPossiblePositions = gameBoard.possibleMovableDestinations
+  }
+
+  if (nextActionPossiblePositions.length === 0) {
+    // No moves available, opponent wins
+    const value = maximizingPlayer ? -999999 : 999999
+    return {
+      value,
+      action: initialAction,
+      movesPerformed: gameBoard.movesPerformed,
+    }
   }
 
   if (maximizingPlayer) {
