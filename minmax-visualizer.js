@@ -911,7 +911,7 @@ function renderNodes(node, positions, bestPathSet) {
     const boardType = parseInt(document.getElementById("boardType").value)
     renderNodeBoardPreview(
       nodePos.x + NODE_CONFIG.radius + 10,
-      nodePos.y - 90,
+      nodePos.y - 70,
       node.boardState,
       boardType
     )
@@ -933,92 +933,168 @@ function renderNodes(node, positions, bestPathSet) {
 function renderNodeBoardPreview(x, y, boardState, boardType) {
   const previewSize = 120
 
-  // Background
-
+  // Draw background
   ctx.fillStyle = "rgba(255, 255, 255, 0.95)"
   ctx.fillRect(x, y, previewSize, previewSize)
-
   ctx.strokeStyle = "#2d3748"
   ctx.lineWidth = 1
-
   ctx.strokeRect(x, y, previewSize, previewSize)
 
-  // Get the correct cell positions and dimensions based on board type
-  const cells = boardType === 0 ? BOARD_A_CELLS : BOARD_B_CELLS
-  const boardWidth = boardType === 0 ? 800 : 300 // Board A: 800, Board B: 300
-  const boardHeight = boardType === 0 ? 650 : 300 // Board A: 650, Board B: 300
-  const yOffset = boardType === 0 ? 50 : 0 // Board A has offset, Board B doesn't
+  // Save context for scaling
+  ctx.save()
 
-  // Draw board positions with proper styling like the main board preview
+  // Translate to preview position
+  ctx.translate(x, y)
+
+  // Calculate scale to fit preview
+  const scale = previewSize / (boardType === 0 ? 800 : 300)
+
+  // Draw board lines with scaled coordinates
+  ctx.strokeStyle = BOARD_STROKE_COLOR
+  ctx.lineWidth =
+    (boardType === 0 ? BOARD_STROKE_WIDTH : BOARD_STROKE_WIDTH_THICK) * scale
+  ctx.lineCap = "round"
+  ctx.lineJoin = "round"
+
+  if (boardType === 0) {
+    // Board A lines
+    // Horizontal line
+    ctx.beginPath()
+    ctx.moveTo(100 * scale, 300 * scale)
+    ctx.lineTo(700 * scale, 300 * scale)
+    ctx.stroke()
+
+    // Rectangle
+    ctx.strokeRect(100 * scale, 200 * scale, 600 * scale, 200 * scale)
+
+    // Diamond shape
+    ctx.beginPath()
+    ctx.moveTo(400 * scale, 0 * scale)
+    ctx.lineTo(125 * scale, 500 * scale)
+    ctx.lineTo(675 * scale, 500 * scale)
+    ctx.closePath()
+    ctx.stroke()
+
+    // Diagonal lines
+    ctx.beginPath()
+    ctx.moveTo(400 * scale, 0 * scale)
+    ctx.lineTo(300 * scale, 500 * scale)
+    ctx.moveTo(400 * scale, 0 * scale)
+    ctx.lineTo(500 * scale, 500 * scale)
+    ctx.stroke()
+  } else {
+    // Board B lines
+    // Rectangle
+    ctx.strokeRect(30 * scale, 30 * scale, 240 * scale, 240 * scale)
+
+    // Grid lines
+    for (let i = 0; i <= 4; i++) {
+      const pos = 30 + i * 60
+      // Vertical lines
+      ctx.beginPath()
+      ctx.moveTo(pos * scale, 30 * scale)
+      ctx.lineTo(pos * scale, 270 * scale)
+      ctx.stroke()
+
+      // Horizontal lines
+      ctx.beginPath()
+      ctx.moveTo(30 * scale, pos * scale)
+      ctx.lineTo(270 * scale, pos * scale)
+      ctx.stroke()
+    }
+
+    // Diagonal lines
+    ctx.beginPath()
+    ctx.moveTo(30 * scale, 30 * scale)
+    ctx.lineTo(270 * scale, 270 * scale)
+    ctx.moveTo(30 * scale, 270 * scale)
+    ctx.lineTo(270 * scale, 30 * scale)
+    ctx.stroke()
+
+    // Diamond polygon
+    ctx.beginPath()
+    ctx.moveTo(30 * scale, 150 * scale)
+    ctx.lineTo(150 * scale, 30 * scale)
+    ctx.lineTo(270 * scale, 150 * scale)
+    ctx.lineTo(150 * scale, 270 * scale)
+    ctx.closePath()
+    ctx.stroke()
+  }
+
+  // Restore context
+  ctx.restore()
+
+  // Now draw the pieces on top
+  const cells = boardType === 0 ? BOARD_A_CELLS : BOARD_B_CELLS
+
   for (let i = 0; i < boardState.length; i++) {
     const pos = cells[i]
-    if (!pos) continue // Skip if position doesn't exist
+    if (!pos) continue
 
-    const cellX = x + (pos.x / boardWidth) * previewSize
-    const cellY = y + ((pos.y + yOffset) / boardHeight) * previewSize
+    const cellX = x + (boardType === 1 ? 12 : 0) + pos.x * scale
+    // const cellY = y - 8 + (pos.y + (boardType === 0 ? 50 : 0)) * scale // Board A y-offset
+    const cellY = y + (boardType === 0 ? 0 : 12) + pos.y * scale // Board A y-offset
 
-    // Draw ellipse (clickable area background)
-    const ellipseRadiusX = boardType === 0 ? 4 : 2.5 // Scaled down ellipse sizes
-    const ellipseRadiusY = boardType === 0 ? 4 : 2.5
+    // Draw clickable area background
+    const ellipseRadiusX = boardType === 0 ? 3 : 2.5
+    const ellipseRadiusY = boardType === 0 ? 3 : 2.5
 
     ctx.beginPath()
     ctx.ellipse(cellX, cellY, ellipseRadiusX, ellipseRadiusY, 0, 0, 2 * Math.PI)
-    ctx.fillStyle = "rgba(255, 107, 53, 0.3)" // Same orange color with opacity
+    ctx.fillStyle = "rgba(255, 107, 53, 0.3)"
     ctx.fill()
 
     // Draw piece if present
     if (boardState[i] === 1) {
-      // Goat - green circle with white "G"
+      // Goat
       ctx.beginPath()
       ctx.ellipse(
         cellX,
         cellY,
-        ellipseRadiusX * 0.8,
-        ellipseRadiusY * 0.8,
+        ellipseRadiusX,
+        ellipseRadiusY,
         0,
         0,
         2 * Math.PI
       )
-      ctx.fillStyle = "#48bb78" // Same green as main board
+      ctx.fillStyle = "#48bb78"
       ctx.fill()
-      ctx.strokeStyle = "#2d3748"
-      ctx.lineWidth = 0.5
-      ctx.stroke()
+      //   ctx.strokeStyle = "#48bb78"
+      //   ctx.lineWidth = 0.5 / scale
+      //   ctx.stroke()
 
-      // Add "G" text
       ctx.fillStyle = "white"
       ctx.font = `${ellipseRadiusX * 0.8}px Arial`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.fillText("G", cellX, cellY + 1)
     } else if (boardState[i] === 2) {
-      // Tiger - red circle with white "T"
+      // Tiger
       ctx.beginPath()
       ctx.ellipse(
         cellX,
         cellY,
-        ellipseRadiusX * 0.8,
-        ellipseRadiusY * 0.8,
+        ellipseRadiusX,
+        ellipseRadiusY,
         0,
         0,
         2 * Math.PI
       )
-      ctx.fillStyle = "#f56565" // Same red as main board
+      ctx.fillStyle = "#f56565"
       ctx.fill()
-      ctx.strokeStyle = "#2d3748"
-      ctx.lineWidth = 0.5
-      ctx.stroke()
+      //   ctx.strokeStyle = "#2d3748"
+      //   ctx.lineWidth = 0.5 / scale
+      //   ctx.stroke()
 
-      // Add "T" text
       ctx.fillStyle = "white"
       ctx.font = `${ellipseRadiusX * 0.8}px Arial`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
       ctx.fillText("T", cellX, cellY + 1)
     } else {
-      // Empty - just the ellipse outline
+      // Empty - just outline
       ctx.strokeStyle = "#2d3748"
-      ctx.lineWidth = 0.5
+      ctx.lineWidth = 0.1
       ctx.stroke()
     }
   }
