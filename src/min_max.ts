@@ -37,6 +37,7 @@ interface TreeVisualizationData {
   totalNodes: number
   maxDepthReached: number
   prunedNodes: number
+  aiPlayer: number
 }
 
 class Board {
@@ -1192,6 +1193,7 @@ let nodeIdCounter = 0
 
 function generateTreeVisualization(
   gameBoard: Board,
+  selectedAiPlayer: number,
   depth: number = 3
 ): TreeVisualizationData {
   /**
@@ -1210,7 +1212,7 @@ function generateTreeVisualization(
     depth: 0,
     value: 0,
     action: -1,
-    isMaximizing: gameBoard.currentPlayer === 2,
+    isMaximizing: gameBoard.currentPlayer === selectedAiPlayer,
     children: [],
     alpha: -9999999,
     beta: 9999999,
@@ -1222,6 +1224,7 @@ function generateTreeVisualization(
     selectedPiece: gameBoard.selectedIndexToMove,
     possibleMoves: [],
   }
+  console.log("rootnode", rootNode)
 
   // globalTreeRoot = rootNode
 
@@ -1250,11 +1253,12 @@ function generateTreeVisualization(
         childBoard,
         depth - 1,
         action,
-        childBoard.currentPlayer === 2,
+        childBoard.currentPlayer === selectedAiPlayer,
         -9999999,
         9999999,
         rootNode,
-        gameBoard.currentPlayer
+        gameBoard.currentPlayer,
+        gameBoard.currentPlayer === selectedAiPlayer
       )
       rootNode.children.push(childNode)
     }
@@ -1285,6 +1289,7 @@ function generateTreeVisualization(
     totalNodes: stats.totalNodes,
     maxDepthReached: stats.maxDepthReached,
     prunedNodes: stats.prunedNodes,
+    aiPlayer: selectedAiPlayer,
   }
 }
 
@@ -1315,7 +1320,8 @@ function buildMinMaxTree(
   alpha: number,
   beta: number,
   parent: TreeNode,
-  aiPlayer: number
+  aiPlayer: number,
+  isMaximizing: boolean
 ): TreeNode {
   /**
    * Build the complete min-max tree for visualization
@@ -1330,7 +1336,7 @@ function buildMinMaxTree(
     depth: parent.depth + 1,
     value: 0,
     action: initialAction,
-    isMaximizing: maximizingPlayer,
+    isMaximizing: isMaximizing,
     children: [],
     parent: parent,
     alpha: alpha,
@@ -1375,7 +1381,7 @@ function buildMinMaxTree(
 
       if (!success) continue
 
-      const nextMaximizing = gameboardCopy.currentPlayer === 2
+      const nextMaximizing = gameboardCopy.currentPlayer === aiPlayer
       const childNode = buildMinMaxTree(
         gameboardCopy,
         depth - 1,
@@ -1384,7 +1390,8 @@ function buildMinMaxTree(
         alpha,
         beta,
         currentNode,
-        aiPlayer
+        aiPlayer,
+        maximizingPlayer
       )
 
       currentNode.children.push(childNode)
@@ -1435,7 +1442,7 @@ function buildMinMaxTree(
 
       if (!success) continue
 
-      const nextMaximizing = gameboardCopy.currentPlayer === 2
+      const nextMaximizing = gameboardCopy.currentPlayer === aiPlayer
       const childNode = buildMinMaxTree(
         gameboardCopy,
         depth - 1,
@@ -1444,7 +1451,8 @@ function buildMinMaxTree(
         alpha,
         beta,
         currentNode,
-        aiPlayer
+        aiPlayer,
+        maximizingPlayer
       )
 
       currentNode.children.push(childNode)
@@ -1572,7 +1580,7 @@ function minMaxWithAlphaBetaPruning(
       }
 
       // Next player's turn - reverse maximizing flag
-      const nextMaximizing = gameboardCopy.currentPlayer === 2
+      const nextMaximizing = gameboardCopy.currentPlayer === aiPlayer
 
       const result = minMaxWithAlphaBetaPruning(
         gameboardCopy,
@@ -1613,7 +1621,7 @@ function minMaxWithAlphaBetaPruning(
       }
 
       // Next player's turn - reverse maximizing flag
-      const nextMaximizing = gameboardCopy.currentPlayer === 2
+      const nextMaximizing = gameboardCopy.currentPlayer === aiPlayer
 
       const result = minMaxWithAlphaBetaPruning(
         gameboardCopy,

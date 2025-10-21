@@ -21,8 +21,15 @@ let zoom = 1
 
 let isDragging = false
 
+let isMouseDown = false
+
 let lastMouseX = 0,
   lastMouseY = 0
+
+let mouseDownTime = 0
+
+let mouseDownX = 0,
+  mouseDownY = 0
 
 let hoveredNode = null
 
@@ -530,13 +537,20 @@ function setupEventListeners() {
  */
 
 function handleMouseDown(e) {
-  isDragging = true
+  isMouseDown = true
+  isDragging = false // Don't start dragging immediately
 
   const rect = canvas.getBoundingClientRect()
 
   lastMouseX = e.clientX - rect.left
 
   lastMouseY = e.clientY - rect.top
+
+  mouseDownX = lastMouseX
+
+  mouseDownY = lastMouseY
+
+  mouseDownTime = Date.now()
 
   canvas.style.cursor = "grabbing"
 }
@@ -553,6 +567,15 @@ function handleMouseMove(e) {
   const mouseX = e.clientX - rect.left
 
   const mouseY = e.clientY - rect.top
+
+  // Check if this should start dragging (mouse down and moved enough)
+  if (
+    !isDragging &&
+    isMouseDown &&
+    (Math.abs(mouseX - mouseDownX) > 5 || Math.abs(mouseY - mouseDownY) > 5)
+  ) {
+    isDragging = true
+  }
 
   if (isDragging) {
     const deltaX = mouseX - lastMouseX
@@ -591,9 +614,34 @@ function handleMouseMove(e) {
 
  */
 
-function handleMouseUp() {
-  isDragging = false
+function handleMouseUp(e) {
+  const rect = canvas.getBoundingClientRect()
+  const mouseX = e.clientX - rect.left
+  const mouseY = e.clientY - rect.top
 
+  // Check if this was a click (not a drag and quick enough)
+  const clickDuration = Date.now() - mouseDownTime
+  const isClick = !isDragging && clickDuration < 300
+
+  if (isClick) {
+    // Find clicked node
+    const worldX = (mouseX - cameraX) / zoom
+    const worldY = (mouseY - cameraY) / zoom
+    const clickedNode = findNodeAtPosition(worldX, worldY)
+
+    if (
+      clickedNode &&
+      clickedNode.children &&
+      clickedNode.children.length > 0
+    ) {
+      // Toggle expansion
+      clickedNode.expanded = !clickedNode.expanded
+      renderCanvas()
+    }
+  }
+
+  isMouseDown = false
+  isDragging = false
   canvas.style.cursor = "grab"
 }
 
@@ -668,7 +716,7 @@ function calculateNodePositions(rootNode) {
 
   const nodesByDepth = new Map()
 
-  // Group nodes by depth
+  // Group nodes by depth (only visible nodes)
 
   function groupNodesByDepth(node, depth = 0) {
     if (!nodesByDepth.has(depth)) {
@@ -677,8 +725,11 @@ function calculateNodePositions(rootNode) {
 
     nodesByDepth.get(depth).push(node)
 
-    for (const child of node.children) {
-      groupNodesByDepth(child, depth + 1)
+    // Only include children if this node is expanded
+    if (node.expanded) {
+      for (const child of node.children) {
+        groupNodesByDepth(child, depth + 1)
+      }
     }
   }
 
@@ -783,7 +834,7 @@ function renderTree() {
 
   // Render nodes
 
-  renderNodes(treeData.rootNode, positions, bestPathSet)
+  renderNodes(treeData.rootNode, positions, bestPathSet, treeData.aiPlayer)
 
   // Render hover preview on top of everything
 
@@ -859,7 +910,7 @@ function renderEdges(node, positions, bestPathSet) {
 
  */
 
-function renderNodes(node, positions, bestPathSet) {
+function renderNodes(node, positions, bestPathSet, aiPlayer) {
   const nodePos = positions.get(node)
 
   if (!nodePos) return
@@ -867,8 +918,12 @@ function renderNodes(node, positions, bestPathSet) {
   // Determine node color
 
   let fillColor = node.isMaximizing
-    ? NODE_CONFIG.colors.tiger
-    : NODE_CONFIG.colors.goat
+    ? aiPlayer === 2
+      ? NODE_CONFIG.colors.tiger
+      : NODE_CONFIG.colors.goat
+    : aiPlayer === 2
+      ? NODE_CONFIG.colors.goat
+      : NODE_CONFIG.colors.tiger
 
   if (node.isPruned) {
     fillColor = NODE_CONFIG.colors.pruned
@@ -911,15 +966,18 @@ function renderNodes(node, positions, bestPathSet) {
 
     ctx.fillText("pruned", nodePos.x, nodePos.y + 5)
   } else {
-    ctx.fillText(`${node.value}`, nodePos.x, nodePos.y - 5)
+    // Draw expansion indicator for nodes with children
+    const hasChildren = node.children && node.children.length > 0
+    const expansionSymbol = hasChildren ? (node.expanded ? "−" : "+") : ""
 
-    ctx.fillText(`A:${node.action}`, nodePos.x, nodePos.y + 5)
+    ctx.fillText(`${node.value}`, nodePos.x, nodePos.y - 5)
+    ctx.fillText(`${expansionSymbol}A:${node.action}`, nodePos.x, nodePos.y + 5)
   }
 
   // Recursively render child nodes
 
   for (const child of node.children) {
-    renderNodes(child, positions, bestPathSet)
+    renderNodes(child, positions, bestPathSet, aiPlayer)
   }
 }
 
@@ -1281,6 +1339,21 @@ function updateBoardPreview() {
 
 /**
 
+ * Initialize expanded state for all nodes in the tree
+ * Only root node starts expanded
+ */
+function initializeNodeExpansionStates(rootNode) {
+  function setExpansionState(node, isRoot = false) {
+    node.expanded = isRoot // Only root starts expanded
+    for (const child of node.children) {
+      setExpansionState(child, false)
+    }
+  }
+  setExpansionState(rootNode, true)
+}
+
+/**
+
  * Main function to expand and visualize the min-max tree
 
  */
@@ -1455,11 +1528,18 @@ async function expandMinMaxTree() {
 
     const startTime = performance.now()
 
-    const visualizationData = generateTreeVisualization(board, maxDepth)
+    const visualizationData = generateTreeVisualization(
+      board,
+      aiPlayer,
+      maxDepth
+    )
 
     const endTime = performance.now()
 
     treeData = visualizationData
+
+    // Initialize expanded state for all nodes (only root expanded initially)
+    initializeNodeExpansionStates(treeData.rootNode)
 
     // Find best move from root node
     const bestMove =
