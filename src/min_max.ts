@@ -779,9 +779,9 @@ class Board {
     } else {
       // Goat's perspective
       score =
-        10 * blockedTigers -
+        3 * blockedTigers -
         6 * goatsCaptured -
-        3 * capturableGoats -
+        4 * capturableGoats -
         100 * (allGoatsCaptured ? 1 : 0) +
         100 * (blockedTigers >= 3 ? 1 : 0)
     }
@@ -1143,7 +1143,8 @@ function getNextBestMove(gameBoard: Board): MinMaxResult {
       isMaximizing,
       -9999999999,
       9999999999,
-      true
+      true,
+      gameboardCopy.currentPlayer
     )
     minMaxValues.push(result)
   }
@@ -1185,7 +1186,7 @@ function getNextBestMove(gameBoard: Board): MinMaxResult {
   return bestMove
 }
 
-const exploredStates = new Map<string, number>()
+// const exploredStates = new Map<string, number>()
 let nodeIdCounter = 0
 // let globalTreeRoot: TreeNode | null = null
 
@@ -1197,7 +1198,7 @@ function generateTreeVisualization(
    * Generate a complete tree visualization for the min-max algorithm
    */
   // Reset global state
-  exploredStates.clear()
+  // exploredStates.clear()
   nodeIdCounter = 0
   // globalTreeRoot = null
 
@@ -1252,7 +1253,8 @@ function generateTreeVisualization(
         childBoard.currentPlayer === 2,
         -9999999,
         9999999,
-        rootNode
+        rootNode,
+        gameBoard.currentPlayer
       )
       rootNode.children.push(childNode)
     }
@@ -1262,7 +1264,7 @@ function generateTreeVisualization(
   const bestPath: string[] = []
   let currentNode = rootNode
   while (currentNode.children.length > 0) {
-    // Find the child with the best value for current player
+    // Find the child with the best value for ai player based on min max algorithm.
     let bestChild = currentNode.children[0]
     for (const child of currentNode.children) {
       if (currentNode.isMaximizing && child.value > bestChild.value) {
@@ -1312,7 +1314,8 @@ function buildMinMaxTree(
   maximizingPlayer: boolean,
   alpha: number,
   beta: number,
-  parent: TreeNode
+  parent: TreeNode,
+  aiPlayer: number
 ): TreeNode {
   /**
    * Build the complete min-max tree for visualization
@@ -1343,10 +1346,7 @@ function buildMinMaxTree(
 
   // Base case - leaf node
   if (depth === 0 || gameBoard.gameOver) {
-    let value = gameBoard.getValue(2) // Tiger's perspective
-    if (!maximizingPlayer && gameBoard.currentPlayer === 1) {
-      value = -value
-    }
+    const value = gameBoard.getValue(aiPlayer)
     currentNode.value = value
     return currentNode
   }
@@ -1383,7 +1383,8 @@ function buildMinMaxTree(
         nextMaximizing,
         alpha,
         beta,
-        currentNode
+        currentNode,
+        aiPlayer
       )
 
       currentNode.children.push(childNode)
@@ -1418,6 +1419,7 @@ function buildMinMaxTree(
             possibleMoves: [],
           }
           currentNode.children.push(prunedNode)
+          break
         }
         break
       }
@@ -1441,7 +1443,8 @@ function buildMinMaxTree(
         nextMaximizing,
         alpha,
         beta,
-        currentNode
+        currentNode,
+        aiPlayer
       )
 
       currentNode.children.push(childNode)
@@ -1476,6 +1479,7 @@ function buildMinMaxTree(
             possibleMoves: [],
           }
           currentNode.children.push(prunedNode)
+          break
         }
         break
       }
@@ -1494,18 +1498,15 @@ function minMaxWithAlphaBetaPruning(
   maximizingPlayer: boolean,
   alpha: number,
   beta: number,
-  applyInitialAction: boolean
+  applyInitialAction: boolean,
+  aiPlayer: number
 ): MinMaxResult {
   /**
    * Implement the min-max algorithm with alpha-beta pruning
    */
   if (depth === 0 || gameBoard.gameOver) {
     // Get the value of the board state from current player's perspective
-    // Always evaluate as tiger's perspective, then negate for goat if needed
-    let value = gameBoard.getValue(2) // Tiger's perspective
-    if (!maximizingPlayer && gameBoard.currentPlayer === 1) {
-      value = -value // Negate for goat's perspective when minimizing
-    }
+    const value = gameBoard.getValue(aiPlayer)
 
     return {
       value,
@@ -1528,17 +1529,17 @@ function minMaxWithAlphaBetaPruning(
   }
 
   // Check if the state has been explored before
-  const boardString = gameBoard.board.join("")
-  const playerMarker = gameBoard.currentPlayer === 2 ? "M" : "m"
-  const stateKey = `${boardString}_${playerMarker}_${gameBoard.selectedIndexToMove}_${gameBoard.goatsPlacedCount}_${gameBoard.goatsCapturedCount}`
+  // const boardString = gameBoard.board.join("")
+  // const playerMarker = gameBoard.currentPlayer === 2 ? "M" : "m"
+  // const stateKey = `${boardString}_${playerMarker}_${gameBoard.selectedIndexToMove}_${gameBoard.goatsPlacedCount}_${gameBoard.goatsCapturedCount}`
 
-  if (exploredStates.has(stateKey)) {
-    return {
-      value: exploredStates.get(stateKey)!,
-      action: initialAction,
-      movesPerformed: gameBoard.movesPerformed,
-    }
-  }
+  // if (exploredStates.has(stateKey)) {
+  //   return {
+  //     value: exploredStates.get(stateKey)!,
+  //     action: initialAction,
+  //     movesPerformed: gameBoard.movesPerformed,
+  //   }
+  // }
 
   // Determine valid actions based on the current game state
   let nextActionPossiblePositions: number[]
@@ -1580,7 +1581,8 @@ function minMaxWithAlphaBetaPruning(
         nextMaximizing,
         alpha,
         beta,
-        false
+        false,
+        aiPlayer
       )
 
       if (result.value > value) {
@@ -1595,7 +1597,7 @@ function minMaxWithAlphaBetaPruning(
     }
 
     // Cache the value for this state
-    exploredStates.set(stateKey, value)
+    // exploredStates.set(stateKey, value)
     return { value, action: initialAction, movesPerformed }
   } else {
     // Goat's turn
@@ -1620,7 +1622,8 @@ function minMaxWithAlphaBetaPruning(
         nextMaximizing,
         alpha,
         beta,
-        false
+        false,
+        aiPlayer
       )
 
       if (result.value < value) {
@@ -1635,7 +1638,7 @@ function minMaxWithAlphaBetaPruning(
     }
 
     // Cache the value for this state
-    exploredStates.set(stateKey, value)
+    // exploredStates.set(stateKey, value)
     return { value, action: initialAction, movesPerformed }
   }
 }

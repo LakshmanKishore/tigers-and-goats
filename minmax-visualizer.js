@@ -1297,9 +1297,7 @@ async function expandMinMaxTree() {
 
     const maxDepth = parseInt(document.getElementById("maxDepth").value)
 
-    const currentPlayer = parseInt(
-      document.getElementById("currentPlayer").value
-    )
+    const aiPlayer = parseInt(document.getElementById("aiPlayer").value)
 
     const goatsPlaced = parseInt(document.getElementById("goatsPlaced").value)
 
@@ -1441,7 +1439,7 @@ async function expandMinMaxTree() {
 
     board.board = [...boardState]
 
-    board.currentPlayer = currentPlayer
+    board.currentPlayer = aiPlayer
 
     board.goatsPlacedCount = goatsPlaced
 
@@ -1464,37 +1462,22 @@ async function expandMinMaxTree() {
     treeData = visualizationData
 
     // Find best move from root node
-
     const bestMove =
       treeData.rootNode.children.length > 0
         ? treeData.rootNode.children.reduce((best, child) => {
-            if (currentPlayer === 2) {
-              // Tiger maximizes
-
-              return child.value > best.value ? child : best
-            } else {
-              // Goat minimizes
-
-              return child.value < best.value ? child : best
-            }
+            return child.value > best.value ? child : best
           }).action
         : "-"
 
     const bestValue =
       treeData.rootNode.children.length > 0
         ? treeData.rootNode.children.reduce((best, child) => {
-            if (currentPlayer === 2) {
-              // Tiger maximizes
-
-              return child.value > best.value ? child : best
-            } else {
-              // Goat minimizes
-
-              return child.value < best.value ? child : best
-            }
+            return child.value > best.value ? child : best
           }).value
         : "-"
 
+    console.log("bestMove", bestMove)
+    console.log("bestValue", bestValue)
     // Update statistics
 
     updateTreeStats({
