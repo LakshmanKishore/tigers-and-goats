@@ -53,68 +53,65 @@ const NODE_CONFIG = {
   },
 }
 
-// Board rendering configuration
-
-const BOARD_CONFIG = {
-  width: 180,
-
-  height: 180,
-
-  positions: [
-    // Define the 23 positions based on the board layout
-
-    { x: 90, y: 20 }, // 0 - top
-
-    { x: 30, y: 50 }, // 1
-
-    { x: 60, y: 50 }, // 2
-
-    { x: 90, y: 50 }, // 3
-
-    { x: 120, y: 50 }, // 4
-
-    { x: 150, y: 50 }, // 5
-
-    { x: 170, y: 50 }, // 6
-
-    { x: 30, y: 80 }, // 7
-
-    { x: 60, y: 80 }, // 8
-
-    { x: 90, y: 80 }, // 9
-
-    { x: 120, y: 80 }, // 10
-
-    { x: 150, y: 80 }, // 11
-
-    { x: 170, y: 80 }, // 12
-
-    { x: 30, y: 110 }, // 13
-
-    { x: 60, y: 110 }, // 14
-
-    { x: 90, y: 110 }, // 15
-
-    { x: 120, y: 110 }, // 16
-
-    { x: 150, y: 110 }, // 17
-
-    { x: 170, y: 110 }, // 18
-
-    { x: 60, y: 140 }, // 19
-
-    { x: 90, y: 140 }, // 20
-
-    { x: 120, y: 140 }, // 21
-
-    { x: 150, y: 140 }, // 22
-  ],
-}
-
 // Board styling constants
 const BOARD_STROKE_COLOR = "#444444ff"
 const BOARD_STROKE_WIDTH = 5
 const BOARD_STROKE_WIDTH_THICK = 2
+
+// Board cell coordinates (from logic.ts)
+const BOARD_A_CELLS = [
+  { x: 400, y: 0 },
+  { x: 100, y: 200 },
+  { x: 290, y: 200 },
+  { x: 360, y: 200 },
+  { x: 440, y: 200 },
+  { x: 510, y: 200 },
+  { x: 700, y: 200 },
+  { x: 100, y: 300 },
+  { x: 235, y: 300 },
+  { x: 340, y: 300 },
+  { x: 460, y: 300 },
+  { x: 565, y: 300 },
+  { x: 700, y: 300 },
+  { x: 100, y: 400 },
+  { x: 180, y: 400 },
+  { x: 320, y: 400 },
+  { x: 480, y: 400 },
+  { x: 620, y: 400 },
+  { x: 700, y: 400 },
+  { x: 125, y: 500 },
+  { x: 300, y: 500 },
+  { x: 500, y: 500 },
+  { x: 675, y: 500 },
+]
+
+const BOARD_B_CELLS = [
+  { x: 0, y: 0 },
+  { x: 60, y: 0 },
+  { x: 120, y: 0 },
+  { x: 180, y: 0 },
+  { x: 240, y: 0 },
+  { x: 0, y: 60 },
+  { x: 60, y: 60 },
+  { x: 120, y: 60 },
+  { x: 180, y: 60 },
+  { x: 240, y: 60 },
+  { x: 0, y: 120 },
+  { x: 60, y: 120 },
+  { x: 120, y: 120 },
+  { x: 180, y: 120 },
+  { x: 240, y: 120 },
+  { x: 0, y: 180 },
+  { x: 60, y: 180 },
+  { x: 120, y: 180 },
+  { x: 180, y: 180 },
+  { x: 240, y: 180 },
+  { x: 0, y: 240 },
+  { x: 60, y: 240 },
+  { x: 120, y: 240 },
+  { x: 180, y: 240 },
+  { x: 240, y: 240 },
+]
 
 /**
  * Creates BoardA SVG (Triangle/Diamond pattern) dynamically
@@ -324,19 +321,13 @@ function getBoardSVG(boardType) {
  * Creates ellipses and clickable areas for game cells in the visualizer
  */
 function createCellElements(gameBoardSVG, boardState) {
-  const positions = BOARD_CONFIG.positions
+  const isBoardA = gameBoardSVG.getAttribute("type") === "boardA"
+  const cells = isBoardA ? BOARD_A_CELLS : BOARD_B_CELLS
   const parent = gameBoardSVG.querySelector("g") || gameBoardSVG
 
-  // Determine board type and scaling
-  const svgViewBox = gameBoardSVG.getAttribute("viewBox").split(" ").map(Number)
-  const svgWidth = svgViewBox[2]
-  const svgHeight = svgViewBox[3]
-
-  // Scale factors to fit positions into SVG viewBox
-  const scaleX = svgWidth / 180 // BOARD_CONFIG is designed for 180 width
-  const scaleY = svgHeight / 180 // BOARD_CONFIG is designed for 180 height
-  const offsetX = svgViewBox[0] // viewBox x offset
-  const offsetY = svgViewBox[1] // viewBox y offset
+  // Determine board type and sizing
+  const ellipseSize = isBoardA ? "8" : "5"
+  const cellSize = isBoardA ? "30" : "15"
 
   // Clear existing cell elements
   const existingEllipses = parent.querySelectorAll("ellipse.cell-ellipse")
@@ -351,9 +342,9 @@ function createCellElements(gameBoardSVG, boardState) {
       return (
         "data:image/svg+xml;base64," +
         btoa(`
-        <svg width="30" height="30" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="15" cy="15" r="12" fill="#48bb78" stroke="#2d3748" stroke-width="2"/>
-          <text x="15" y="19" text-anchor="middle" font-family="Arial" font-size="12" fill="white">G</text>
+        <svg width="${cellSize * 2}" height="${cellSize * 2}" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="${cellSize}" cy="${cellSize}" r="${cellSize * 0.8}" fill="#48bb78" stroke="#2d3748" stroke-width="2"/>
+          <text x="${cellSize}" y="${cellSize + 4}" text-anchor="middle" font-family="Arial" font-size="${cellSize * 0.4}" fill="white">G</text>
         </svg>
       `)
       )
@@ -362,34 +353,31 @@ function createCellElements(gameBoardSVG, boardState) {
       return (
         "data:image/svg+xml;base64," +
         btoa(`
-        <svg width="30" height="30" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="15" cy="15" r="12" fill="#f56565" stroke="#2d3748" stroke-width="2"/>
-          <text x="15" y="19" text-anchor="middle" font-family="Arial" font-size="12" fill="white">T</text>
+        <svg width="${cellSize * 2}" height="${cellSize * 2}" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="${cellSize}" cy="${cellSize}" r="${cellSize * 0.8}" fill="#f56565" stroke="#2d3748" stroke-width="2"/>
+          <text x="${cellSize}" y="${cellSize + 4}" text-anchor="middle" font-family="Arial" font-size="${cellSize * 0.4}" fill="white">T</text>
         </svg>
       `)
       )
     }
     return ""
   }
+  console.log("cells:", cells)
 
   // Create ellipses and images for each cell
-  for (let i = 0; i < Math.min(23, boardState.length); i++) {
-    const pos = positions[i]
+  for (let i = 0; i < cells.length; i++) {
+    const cell = cells[i]
     const piece = boardState[i]
-
-    // Scale position to fit SVG viewBox
-    const scaledX = offsetX + pos.x * scaleX
-    const scaledY = offsetY + pos.y * scaleY
 
     // Create ellipse (clickable area)
     const ellipse = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "ellipse"
     )
-    ellipse.setAttribute("cx", scaledX.toString())
-    ellipse.setAttribute("cy", scaledY.toString())
-    ellipse.setAttribute("rx", "8")
-    ellipse.setAttribute("ry", "8")
+    ellipse.setAttribute("cx", cell.x.toString())
+    ellipse.setAttribute("cy", cell.y.toString())
+    ellipse.setAttribute("rx", ellipseSize)
+    ellipse.setAttribute("ry", ellipseSize)
     ellipse.setAttribute("class", "cell-ellipse")
     ellipse.style.fill = "#ff6b35" // Orange color for clickable indication
     ellipse.style.opacity = "0.3"
@@ -400,10 +388,10 @@ function createCellElements(gameBoardSVG, boardState) {
       "http://www.w3.org/2000/svg",
       "image"
     )
-    image.setAttribute("x", (scaledX - 15).toString())
-    image.setAttribute("y", (scaledY - 15).toString())
-    image.setAttribute("width", "30")
-    image.setAttribute("height", "30")
+    image.setAttribute("x", (cell.x - +cellSize).toString())
+    image.setAttribute("y", (cell.y - +cellSize).toString())
+    image.setAttribute("width", (+cellSize * 2).toString())
+    image.setAttribute("height", (+cellSize * 2).toString())
     image.setAttribute("class", "cell-image")
     image.style.cursor = "pointer"
 
@@ -450,7 +438,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Add event listener for board type changes
   const boardTypeSelect = document.getElementById("boardType")
-  boardTypeSelect.addEventListener("change", updateBoardPreview)
+  boardTypeSelect.addEventListener("change", function () {
+    const boardType = parseInt(boardTypeSelect.value)
+    updateBoardInput(boardType)
+    updateBoardPreview()
+  })
+
+  // Initialize board input for default board type
+  updateBoardInput(0)
 
   updateBoardPreview()
 })
@@ -913,10 +908,12 @@ function renderNodes(node, positions, bestPathSet) {
   // Draw small board preview if hovered
 
   if (node === hoveredNode) {
+    const boardType = parseInt(document.getElementById("boardType").value)
     renderNodeBoardPreview(
       nodePos.x + NODE_CONFIG.radius + 10,
       nodePos.y - 90,
-      node.boardState
+      node.boardState,
+      boardType
     )
   }
 
@@ -933,10 +930,8 @@ function renderNodes(node, positions, bestPathSet) {
 
  */
 
-function renderNodeBoardPreview(x, y, boardState) {
+function renderNodeBoardPreview(x, y, boardState, boardType) {
   const previewSize = 120
-
-  const cellSize = 8
 
   // Background
 
@@ -948,71 +943,90 @@ function renderNodeBoardPreview(x, y, boardState) {
 
   ctx.strokeRect(x, y, previewSize, previewSize)
 
-  // Draw board positions
+  // Get the correct cell positions and dimensions based on board type
+  const cells = boardType === 0 ? BOARD_A_CELLS : BOARD_B_CELLS
+  const boardWidth = boardType === 0 ? 800 : 300 // Board A: 800, Board B: 300
+  const boardHeight = boardType === 0 ? 650 : 300 // Board A: 650, Board B: 300
+  const yOffset = boardType === 0 ? 50 : 0 // Board A has offset, Board B doesn't
 
-  for (let i = 0; i < Math.min(23, boardState.length); i++) {
-    const pos = BOARD_CONFIG.positions[i]
+  // Draw board positions with proper styling like the main board preview
+  for (let i = 0; i < boardState.length; i++) {
+    const pos = cells[i]
+    if (!pos) continue // Skip if position doesn't exist
 
-    const cellX = x + (pos.x / BOARD_CONFIG.width) * previewSize
+    const cellX = x + (pos.x / boardWidth) * previewSize
+    const cellY = y + ((pos.y + yOffset) / boardHeight) * previewSize
 
-    const cellY = y + (pos.y / BOARD_CONFIG.height) * previewSize
+    // Draw ellipse (clickable area background)
+    const ellipseRadiusX = boardType === 0 ? 4 : 2.5 // Scaled down ellipse sizes
+    const ellipseRadiusY = boardType === 0 ? 4 : 2.5
 
     ctx.beginPath()
-
-    ctx.arc(cellX, cellY, cellSize / 2, 0, 2 * Math.PI)
-
-    if (boardState[i] === 0) {
-      ctx.fillStyle = "#e2e8f0" // Empty
-    } else if (boardState[i] === 1) {
-      ctx.fillStyle = "#48bb78" // Goat
-    } else if (boardState[i] === 2) {
-      ctx.fillStyle = "#f56565" // Tiger
-    }
-
+    ctx.ellipse(cellX, cellY, ellipseRadiusX, ellipseRadiusY, 0, 0, 2 * Math.PI)
+    ctx.fillStyle = "rgba(255, 107, 53, 0.3)" // Same orange color with opacity
     ctx.fill()
 
-    ctx.strokeStyle = "#2d3748"
-    ctx.lineWidth = 0.5
+    // Draw piece if present
+    if (boardState[i] === 1) {
+      // Goat - green circle with white "G"
+      ctx.beginPath()
+      ctx.ellipse(
+        cellX,
+        cellY,
+        ellipseRadiusX * 0.8,
+        ellipseRadiusY * 0.8,
+        0,
+        0,
+        2 * Math.PI
+      )
+      ctx.fillStyle = "#48bb78" // Same green as main board
+      ctx.fill()
+      ctx.strokeStyle = "#2d3748"
+      ctx.lineWidth = 0.5
+      ctx.stroke()
 
-    ctx.stroke()
+      // Add "G" text
+      ctx.fillStyle = "white"
+      ctx.font = `${ellipseRadiusX * 0.8}px Arial`
+      ctx.textAlign = "center"
+      ctx.textBaseline = "middle"
+      ctx.fillText("G", cellX, cellY + 1)
+    } else if (boardState[i] === 2) {
+      // Tiger - red circle with white "T"
+      ctx.beginPath()
+      ctx.ellipse(
+        cellX,
+        cellY,
+        ellipseRadiusX * 0.8,
+        ellipseRadiusY * 0.8,
+        0,
+        0,
+        2 * Math.PI
+      )
+      ctx.fillStyle = "#f56565" // Same red as main board
+      ctx.fill()
+      ctx.strokeStyle = "#2d3748"
+      ctx.lineWidth = 0.5
+      ctx.stroke()
+
+      // Add "T" text
+      ctx.fillStyle = "white"
+      ctx.font = `${ellipseRadiusX * 0.8}px Arial`
+      ctx.textAlign = "center"
+      ctx.textBaseline = "middle"
+      ctx.fillText("T", cellX, cellY + 1)
+    } else {
+      // Empty - just the ellipse outline
+      ctx.strokeStyle = "#2d3748"
+      ctx.lineWidth = 0.5
+      ctx.stroke()
+    }
   }
 }
 
 /**
 
  * Render board state in the sidebar preview
-
- */
-
-function renderBoardPreview() {
-  const previewElement = document.getElementById("boardPreview")
-  const boardInput = document.getElementById("boardInput").value
-  const boardTypeSelect = document.getElementById("boardType")
-  const boardType = parseInt(boardTypeSelect.value)
-
-  try {
-    const boardState = boardInput.split(",").map((s) => parseInt(s.trim()))
-
-    if (boardState.length !== 23) {
-      throw new Error("Board must have exactly 23 positions")
-    }
-
-    // Create SVG board using the selected board type
-    const boardSVG = getBoardSVG(boardType)
-
-    // Add ellipses and images for each cell position
-    createCellElements(boardSVG, boardState)
-
-    // Clear and add the SVG to the preview element
-    previewElement.innerHTML = ""
-    previewElement.appendChild(boardSVG)
-
-    updateStatus("Board preview updated", "success")
-  } catch (error) {
-    previewElement.innerHTML = `<span style="color: #e53e3e;">Error: ${error.message}</span>`
-    updateStatus(`Board preview error: ${error.message}`, "error")
-  }
-}
 
 /**
 
@@ -1115,12 +1129,67 @@ function resetVisualization() {
 
 /**
 
+ * Update board input placeholder and default value based on board type
+
+ */
+
+function updateBoardInput(boardType) {
+  const boardInput = document.getElementById("boardInput")
+  const expectedLength = boardType === 0 ? 23 : 25
+  const defaultState = new Array(expectedLength).fill(0).join(",")
+
+  boardInput.placeholder = `Enter board state as ${expectedLength} comma-separated numbers (0=empty, 1=goat, 2=tiger)`
+
+  // Only set default value if input is empty or has the wrong length
+  const currentValue = boardInput.value.trim()
+  if (
+    currentValue === "" ||
+    currentValue.split(",").length !== expectedLength
+  ) {
+    boardInput.value = defaultState
+  }
+}
+
+/**
+
  * Update board preview when input changes
 
  */
 
 function updateBoardPreview() {
-  renderBoardPreview()
+  const previewElement = document.getElementById("boardPreview")
+  const boardInput = document.getElementById("boardInput")
+  const boardTypeSelect = document.getElementById("boardType")
+  const boardType = parseInt(boardTypeSelect.value)
+
+  try {
+    const boardState = boardInput.value
+      .split(",")
+      .map((s) => parseInt(s.trim()))
+
+    // Validate board state length based on board type
+    const expectedLength = boardType === 0 ? 23 : 25
+    if (boardState.length !== expectedLength) {
+      throw new Error(
+        `Board ${boardType === 0 ? "A" : "B"} must have exactly ${expectedLength} positions`
+      )
+    }
+
+    // Create SVG board using the same approach as client.ts
+    const boardSVG = getBoardSVG(boardType)
+
+    // Add ellipses and images for each cell position
+    createCellElements(boardSVG, boardState)
+
+    // Clear and add the SVG to the preview element
+    previewElement.innerHTML = ""
+    previewElement.appendChild(boardSVG)
+
+    updateStatus("Board preview updated", "success")
+  } catch (error) {
+    previewElement.innerHTML = `<span style="color: #e53e3e;">Error: ${error.message}</span>`
+    updateStatus(`Board preview error: ${error.message}`, "error")
+  }
 }
 
 /**
@@ -1136,7 +1205,8 @@ async function expandMinMaxTree() {
     document.getElementById("expandTreeBtn").disabled = true
 
     // Get input parameters
-
+    const boardTypeSelect = document.getElementById("boardType")
+    const boardType = parseInt(boardTypeSelect.value)
     const boardInput = document.getElementById("boardInput").value
 
     const maxDepth = parseInt(document.getElementById("maxDepth").value)
@@ -1165,21 +1235,116 @@ async function expandMinMaxTree() {
       return val
     })
 
-    if (boardState.length !== 23) {
-      throw new Error("Board must have exactly 23 positions")
+    // Validate board state length based on board type
+    const expectedLength = boardType === 0 ? 23 : 25
+    if (boardState.length !== expectedLength) {
+      throw new Error(
+        `Board ${boardType === 0 ? "A" : "B"} must have exactly ${expectedLength} positions`
+      )
     }
 
     updateStatus("Creating game board...", "info")
 
+    // Define Board B connectivity arrays if needed
+    let boardBReachableCellIndexes = null
+    let boardBTigerJumpableIndexes = null
+    let boardBGoatRemovalAfterTigerJumpIndexes = null
+
+    if (boardType === 1) {
+      boardBReachableCellIndexes = [
+        [1, 5, 6], // 0
+        [0, 2, 6], // 1
+        [1, 3, 7], // 2
+        [2, 4, 8], // 3
+        [3, 9], // 4
+        [0, 6, 10], // 5
+        [0, 1, 2, 5, 7, 10, 11, 12], // 6
+        [2, 6, 8, 12], // 7
+        [2, 3, 4, 7, 9, 12, 13, 14], // 8
+        [4, 8, 14], // 9
+        [5, 6, 11, 15, 16], // 10
+        [6, 10, 12, 16], // 11
+        [6, 7, 8, 11, 13, 16, 17, 18], // 12
+        [8, 12, 14, 18], // 13
+        [8, 9, 13, 18, 19], // 14
+        [10, 16, 20], // 15
+        [10, 11, 12, 15, 17, 20, 21, 22], // 16
+        [12, 16, 18, 22], // 17
+        [12, 13, 14, 17, 19, 22, 23, 24], // 18
+        [14, 18, 24], // 19
+        [15, 16, 21], // 20
+        [16, 20, 22], // 21
+        [16, 17, 18, 21, 23], // 22
+        [18, 22, 24], // 23
+        [18, 19, 23], // 24
+      ]
+      boardBTigerJumpableIndexes = [
+        [2, 10, 12], // 0
+        [3, 11], // 1
+        [0, 4, 12], // 2
+        [1, 13], // 3
+        [2, 14], // 4
+        [7, 15], // 5
+        [8, 16, 18], // 6
+        [5, 9, 17], // 7
+        [6, 18], // 8
+        [7, 19], // 9
+        [0, 2, 12, 20, 22], // 10
+        [1, 13, 21], // 11
+        [0, 2, 4, 10, 14, 20, 22, 24], // 12
+        [3, 11, 23], // 13
+        [2, 4, 12, 22, 24], // 14
+        [5, 17], // 15
+        [6, 8, 18], // 16
+        [7, 15, 19], // 17
+        [6, 8, 16], // 18
+        [9, 17], // 19
+        [10, 12, 22], // 20
+        [11, 23], // 21
+        [10, 12, 14], // 22
+        [13, 21], // 23
+        [12, 14, 22], // 24
+      ]
+      boardBGoatRemovalAfterTigerJumpIndexes = [
+        [1, 5, 6], // 0
+        [2, 6], // 1
+        [1, 3, 7], // 2
+        [2, 8], // 3
+        [3, 9], // 4
+        [6, 10], // 5
+        [7, 11, 12], // 6
+        [6, 8, 12], // 7
+        [7, 13], // 8
+        [8, 14], // 9
+        [5, 6, 11, 15, 16], // 10
+        [6, 12, 16], // 11
+        [6, 7, 8, 11, 13, 16, 17, 18], // 12
+        [8, 12, 18], // 13
+        [8, 9, 13, 18, 19], // 14
+        [10, 16], // 15
+        [11, 12, 17], // 16
+        [12, 16, 18], // 17
+        [12, 13, 17], // 18
+        [14, 18], // 19
+        [15, 16, 21], // 20
+        [16, 22], // 21
+        [16, 17, 18], // 22
+        [18, 22], // 23
+        [18, 19, 23], // 24
+      ]
+    }
+
     // Import the Board class and tree generation function
 
-    const { Board, generateTreeVisualization } = await import(
-      "./src/min_max.js"
-    )
+    const { Board, generateTreeVisualization } = await import("../min_max.js")
 
     // Create board instance
 
-    const board = new Board()
+    const board = new Board(
+      boardBReachableCellIndexes,
+      boardBTigerJumpableIndexes,
+      boardBGoatRemovalAfterTigerJumpIndexes
+    )
 
     board.board = [...boardState]
 
