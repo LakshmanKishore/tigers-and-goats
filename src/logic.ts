@@ -283,9 +283,9 @@ const cellsForBoardB: Cell[] = [
     x: 240,
     y: 0,
     playerId: null,
-    reachableCellIndexes: [3, 9],
-    tigerJumpableIndexes: [2, 14],
-    goatRemovalAfterTigerJumpIndexes: [3, 9],
+    reachableCellIndexes: [3, 8, 9],
+    tigerJumpableIndexes: [2, 12, 14],
+    goatRemovalAfterTigerJumpIndexes: [3, 8, 9],
   }, // 4
 
   // Second row (5 points)
