@@ -318,8 +318,8 @@ const cellsForBoardB: Cell[] = [
     y: 60,
     playerId: null,
     reachableCellIndexes: [2, 3, 4, 7, 9, 12, 13, 14],
-    tigerJumpableIndexes: [6, 12, 18],
-    goatRemovalAfterTigerJumpIndexes: [7, 16, 13],
+    tigerJumpableIndexes: [6, 16, 18],
+    goatRemovalAfterTigerJumpIndexes: [7, 12, 13],
   }, // 8
   {
     x: 240,
