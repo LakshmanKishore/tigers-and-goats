@@ -267,9 +267,9 @@ const cellsForBoardB: Cell[] = [
     x: 120,
     y: 0,
     playerId: null,
-    reachableCellIndexes: [1, 3, 7],
-    tigerJumpableIndexes: [0, 4, 12],
-    goatRemovalAfterTigerJumpIndexes: [1, 3, 7],
+    reachableCellIndexes: [1, 3, 6, 7, 8],
+    tigerJumpableIndexes: [0, 4, 10, 12, 14],
+    goatRemovalAfterTigerJumpIndexes: [1, 3, 6, 7, 8],
   }, // 2
   {
     x: 180,
@@ -318,8 +318,8 @@ const cellsForBoardB: Cell[] = [
     y: 60,
     playerId: null,
     reachableCellIndexes: [2, 3, 4, 7, 9, 12, 13, 14],
-    tigerJumpableIndexes: [6, 18],
-    goatRemovalAfterTigerJumpIndexes: [7, 13],
+    tigerJumpableIndexes: [6, 12, 18],
+    goatRemovalAfterTigerJumpIndexes: [7, 16, 13],
   }, // 8
   {
     x: 240,
@@ -436,8 +436,8 @@ const cellsForBoardB: Cell[] = [
     y: 240,
     playerId: null,
     reachableCellIndexes: [16, 17, 18, 21, 23],
-    tigerJumpableIndexes: [10, 12, 14],
-    goatRemovalAfterTigerJumpIndexes: [16, 17, 18],
+    tigerJumpableIndexes: [10, 12, 14, 20, 24],
+    goatRemovalAfterTigerJumpIndexes: [16, 17, 18, 21, 23],
   }, // 22
   {
     x: 180,

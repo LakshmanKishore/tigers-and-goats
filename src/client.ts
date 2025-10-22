@@ -838,7 +838,8 @@ function convertGameStateToBoard(gameState: GameState): Board {
   const board = new Board(
     reachableCellIndexes,
     tigerJumpableIndexes,
-    goatRemovalAfterTigerJumpIndexes
+    goatRemovalAfterTigerJumpIndexes,
+    gameState.boardType == 0 ? 15 : 20 // Total goats to place based on board type
   )
 
   // Set board size and connectivity based on board type

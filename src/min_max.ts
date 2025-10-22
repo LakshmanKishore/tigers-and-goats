@@ -44,7 +44,7 @@ class Board {
   board: number[] = new Array(23).fill(0)
   nextAction: NextAction = "selectToPlace"
   currentPlayer = 1 // 1->goat, 2->tiger
-  totalGoatsToPlace = 15 // Total goats to place
+  totalGoatsToPlace = 20 // Total goats to place
   goatsPlacedCount = 0
   goatsCapturedCount = 0
   selectedIndexToMove = -1
@@ -140,7 +140,8 @@ class Board {
   constructor(
     reachableCellIndexes?: number[][],
     tigerJumpableIndexes?: number[][],
-    goatRemovalAfterTigerJumpIndexes?: number[][]
+    goatRemovalAfterTigerJumpIndexes?: number[][],
+    totalGoatsToPlace?: number
   ) {
     // Initialize tigers at positions 0, 3, 4
     this.board[0] = 2
@@ -154,6 +155,9 @@ class Board {
     }
     if (goatRemovalAfterTigerJumpIndexes) {
       this.goatRemovalAfterTigerJumpIndexes = goatRemovalAfterTigerJumpIndexes
+    }
+    if (totalGoatsToPlace !== undefined) {
+      this.totalGoatsToPlace = totalGoatsToPlace
     }
   }
 
@@ -888,7 +892,8 @@ class Board {
     const cloned = new Board(
       this.reachableCellIndexes,
       this.tigerJumpableIndexes,
-      this.goatRemovalAfterTigerJumpIndexes
+      this.goatRemovalAfterTigerJumpIndexes,
+      this.totalGoatsToPlace
     )
     cloned.board = [...this.board]
     cloned.nextAction = this.nextAction

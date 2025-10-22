@@ -9,8 +9,8 @@ body {
   background-repeat: no-repeat;
   background-position: center center;
   background-size: cover;
-  width: 100vw;
-  height: 100vh;
+  width: 98vw;
+  height: 98vh;
   overflow: hidden;
 }
 
@@ -145,8 +145,8 @@ h1 {
   display: none;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  height: 100vh;
+  width: 98vw;
+  height: 97vh;
   padding: 2vh 2vw;
   box-sizing: border-box;
 }
@@ -171,7 +171,7 @@ h1 {
   align-items: center;
   justify-content: center;
   /* width: 90vw; */
-  height: calc(100vh - 20vh);
+  height: calc(97vh - 20vh);
   margin: 2vh 0;
 }
 
@@ -184,8 +184,8 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  height: 100vh;
+  width: 98vw;
+  height: 97vh;
   justify-content: space-between;
   padding: 1vh 0;
   box-sizing: border-box;
