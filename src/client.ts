@@ -1018,6 +1018,10 @@ Rune.initClient({
       } else {
         gamePage.classList.remove("dimmed")
       }
+    } else {
+      // Game not started, switch back to config page
+      configPage.classList.remove("hidden")
+      gamePage.classList.remove("active")
     }
 
     updateCellImages({ game })
