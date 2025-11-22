@@ -1500,7 +1500,7 @@ async function expandMinMaxTree() {
 
     // Import the Board class and tree generation function
 
-    const { Board, generateTreeVisualization } = await import("../min_max.js")
+    const { Board, generateTreeVisualization } = await import("./min_max.js")
 
     // Create board instance
 
