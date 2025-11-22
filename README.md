@@ -32,6 +32,8 @@ The `min_max.js` file is generated from `src/min_max.ts` and is required for the
 Run this command from the project root to generate `min_max.js`:
 ```bash
 npx tsc src/min_max.ts --outDir ./ --target ESNext --module ESNext
+# On Windows, you may also need to set the file as read-only:
+attrib +r min_max.js
 ```
 
 **Important:** `min_max.js` is a generated file and should not be edited manually. Any changes should be made to `src/min_max.ts` and then regenerate the JavaScript file using the command above.
